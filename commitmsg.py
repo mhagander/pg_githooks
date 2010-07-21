@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # This is a simple script to generate commit messages formatted in the way
-# the PostgreSQL projects prefers them. Anybody else is of course also
+# the PostgreSQL projects prefer them. Anybody else is of course also
 # free to use it..
 #
 # Note: the script (not surprisingly) uses the git commands in pipes, so git
