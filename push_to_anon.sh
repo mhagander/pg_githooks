@@ -35,8 +35,8 @@ if [ $M -gt 0 -o "$2" == "--force" ]; then
 	trap "rm -f /tmp/.git_repo_push.lck" INT TERM EXIT
 	touch /tmp/.git_repo_push.lck
 	touch last_anonymous_push
-	git push -q anonymous --all
-	git push -q anonymous --tags
+	git push anonymous --all >/dev/null
+	git push anonymous --tags >/dev/null
 	rm -f /tmp/.git_repo_push.lck
 	trap - INT TERM EXIT
     else
