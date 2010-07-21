@@ -1,5 +1,14 @@
-PostgreSQL git commit message script
-====================================
+PostgreSQL git scripts
+======================
+This projects holds some misc scripts for the PostgreSQL git repository,
+mainly hooks. They're not intended to be complete - just to do the parts
+that the PostgreSQL projects require.
+
+Parts of it may of course apply to other projects as well...
+
+
+git commit message script
+=========================
 This is a simplified (in some ways) and enhanced (in other ways) script
 for sending commit messages from a git repository, specifically written
 for the PostgreSQL repositories.
@@ -52,3 +61,47 @@ gitweb
 debug
   set to 1 to output data on console instead of sending email
 
+
+git policy enforcement script
+=============================
+This script performs some simple policy enforcment on git commits. Git supports
+a lot of advanced operations that the PostgreSQL project doesn't use - or wants
+to use. This script attempts to enforce as many of these policies as possible.
+
+Installation & configuration
+----------------------------
+Copy or link the script ``policyenforce.py`` as ``hooks/update`` in your (bare) git
+repository. Make sure python is available at the given path, or adjust
+the first line of the script to match where it is. git has to be available
+in the path as well.
+
+Create a file called ``hooks/policyenforce.ini``. This file will contain all the
+configuration for the script. It should contain something like: ::
+
+	[policyenforce]
+	debug = 0
+	
+	[policies]
+	nomerge=1
+	committerequalsauthor=1
+	committerlist=1
+	
+	[committers]
+	Example User=example@example.org
+	Example Other=other@example.org
+
+The policy section lists which policies are available. Set a policy to 1 to
+enforce the check, or 0 (or non-existant) to disable the check.
+
+nomerge
+	Enforce no merge commits. It's recommended that you use the core
+	git feature for this as well (denyNonFastforwards = true).
+committerequalsauthor
+	Enforce that the user listed under "committer" is the same as that
+	under "author". This is for projects that track authors in the text
+	contents of the message instead.
+committerlist
+	Enforce that the username and email of the committer is listed in the
+	config file. This ensures that committers don't accidentally use a
+	badly configured client. All the commiters should be listed in the
+	[committers] section, in the format User Name=email.
