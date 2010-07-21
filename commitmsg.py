@@ -179,6 +179,48 @@ def parse_commit_log(lines):
 	sendmail(msg)
 	return True
 
+def parse_annotated_tag(lines):
+	"""
+	Parse a single commit off the commitlog, which should be in an array
+	of lines, generate a commit message, and send it.
+
+	The contents of the array will be destroyed.
+	"""
+	if len(lines) == 0:
+		return
+
+	if not lines[0].startswith('tag'):
+		raise Exception("Tag message does not start with tag!")
+	tagname = lines[0][4:].strip()
+
+	if not lines[1].startswith('Tagger: '):
+		raise Exception("Tag message does not contain tagger!")
+	author = lines[1][8:].strip()
+
+	if not lines[2].startswith('Date:   '):
+		raise Exception("Tag message does not contain date!")
+	if not lines[3].strip() == "":
+		raise Exception("Tag message does not contian message separator!")
+
+	mail = []
+	mail.append('Tag %s has been created.' % tagname)
+	mail.append("View: %s" % (
+			c.get('commitmsg','gitweb').replace('$action','tag').replace('$commit', 'refs/tags/%s' % tagname)))
+	mail.append("")
+	mail.append("Log Message")
+	mail.append("-----------")
+
+	for i in range(4, len(lines)):
+		if lines[i].strip() == '':
+			break
+		mail.append(lines[i].rstrip())
+
+	# Ignore the commit it's referring to here
+	sendmail(
+		create_message("\n".join(mail),
+					   author,
+					   c.get('commitmsg','subject').replace('$shortmsg', 'Tag %s has been created.' % tagname)))
+	return
 
 if __name__ == "__main__":
 	# Get a list of refs on stdin, do somethign smart with it
@@ -190,15 +232,41 @@ if __name__ == "__main__":
 
 		# Build the email
 		if oldobj == "".zfill(40):
-			# old object being all zeroes means a new branch was created
-			sendmail(
-				create_message("Branch %s was created.\n\nView: %s" % (
-						ref,
-						c.get('commitmsg', 'gitweb').replace('$action','shortlog').replace('$commit', ref),
-						),
-							   c.get('commitmsg', 'fallbacksender'),
-							   c.get('commitmsg','subject').replace("$shortmsg",
-																	"Branch %s was created" % ref)))
+			# old object being all zeroes means a new branch or tag was created
+			if ref.startswith("refs/heads/"):
+				# It's a branch!
+				sendmail(
+					create_message("Branch %s was created.\n\nView: %s" % (
+							ref,
+							c.get('commitmsg', 'gitweb').replace('$action','shortlog').replace('$commit', ref),
+							),
+								   c.get('commitmsg', 'fallbacksender'),
+								   c.get('commitmsg','subject').replace("$shortmsg",
+																		"Branch %s was created" % ref)))
+			elif ref.startswith("refs/tags/"):
+				# It's a tag!
+				# It can be either an annotated tag or a lightweight one.
+				p = Popen("git cat-file -t %s" % ref, shell=True, stdout=PIPE)
+				t = p.stdout.read().strip()
+				p.stdout.close()
+				if t == "commit":
+					# Lightweight tag with no further information
+					sendmail(
+						create_message("Tag %s was created.\n" % ref,
+									   c.get('commitmsg', 'fallbacksender'),
+									   c.get('commitmsg','subject').replace("$shortmsg",
+																			"Tag %s was created" % ref)))
+				elif t == "tag":
+					# Annotated tag! Get the description!
+					p = Popen("git show %s" % ref, shell=True, stdout=PIPE)
+					lines = p.stdout.readlines()
+					p.stdout.close()
+					parse_annotated_tag(lines)
+				else:
+					raise Exception("Unknown tag type '%s'" % t)
+			else:
+				raise Exception("Unknown branch/tag type %s" % ref)
+
 		elif newobj == "".zfill(40):
 			# new object being all zeroes means a branch was removed
 			sendmail(
