@@ -223,7 +223,7 @@ def parse_annotated_tag(lines):
 	return
 
 if __name__ == "__main__":
-	# Get a list of refs on stdin, do somethign smart with it
+	# Get a list of refs on stdin, do something smart with it
 	while True:
 		l = sys.stdin.readline()
 		if not l: break
