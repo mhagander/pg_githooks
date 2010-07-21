@@ -175,7 +175,7 @@ def parse_commit_log(lines):
 	mail.append("")
 	mail.append("Branches")
 	mail.append("--------")
-	mail.append("\n".join([branch.strip(' *') for branch in branches]))
+	mail.append("\n".join([branch.strip(" *\r\n") for branch in branches]))
 	mail.append("")
 	mail.append("Modified Files")
 	mail.append("--------------")
