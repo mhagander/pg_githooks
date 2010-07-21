@@ -16,12 +16,12 @@ units and not individually for each file like cvs does.
 
 Installation & configuration
 ----------------------------
-Copy or link the script as "hooks/post-receive" in your (bare) git
+Copy or link the script ``commitmsg.py`` as ``hooks/post-receive`` in your (bare) git
 repository. Make sure python is available at the given path, or adjust
 the first line of the script to match where it is. git has to be available
 in the path as well.
 
-Create a file called hooks/commitmsg.ini. This file will contain all the
+Create a file called ``hooks/commitmsg.ini``. This file will contain all the
 configuration for the script. It should contain something like: ::
 
 	[commitmsg]
