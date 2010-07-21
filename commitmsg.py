@@ -173,8 +173,12 @@ def parse_commit_log(lines):
 	mail.append("-----------")
 	mail.extend(commitmsg)
 	mail.append("")
-	mail.append("Branches")
-	mail.append("--------")
+	if len(branches) > 1:
+		mail.append("Branches")
+		mail.append("--------")
+	else:
+		mail.append("Branch")
+		mail.append("------")
 	mail.append("\n".join([branch.strip(" *\r\n") for branch in branches]))
 	mail.append("")
 	mail.append("Modified Files")
