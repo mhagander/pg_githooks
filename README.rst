@@ -105,3 +105,31 @@ committerlist
 	config file. This ensures that committers don't accidentally use a
 	badly configured client. All the commiters should be listed in the
 	[committers] section, in the format User Name=email.
+
+
+git command wrapper script
+==========================
+This script wraps the command run through ssh to make sure that it can
+only be approved git commands, and to make sure the commands are logged
+with who does what.
+
+The script is adapted from the one running on git.postgresql.org, but
+significantly simplified.
+
+Installation & configuration
+----------------------------
+Put the script ``gitwrap.py`` "somewhere". In the same directory, create
+a file called ``gitwrap.ini`` with contents like this: ::
+
+	[paths]
+	logfile=/some/where/gitwrap.log
+	gitrepo=/some/where/repository.git
+
+Make sure the git user has permissions on these directories.
+
+When this is done, put something like this in ``~/.ssh/authorized_keys``
+for the git user: ::
+
+	command="/home/git/gitwrap/gitwrap.py 'Some User'",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty ssh-rsa ABCDABCD<sshkeyhere>
+
+One row for each committer.
