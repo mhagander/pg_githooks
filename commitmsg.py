@@ -159,6 +159,11 @@ def parse_commit_log(lines):
 			break
 		diffstat.append(l.strip())
 
+	# Figure out affected branches
+	p = Popen("git branch --contains %s" % commitinfo[7:], shell=True, stdout=PIPE)
+	branches = p.stdout.readlines()
+	p.stdout.close()
+
 	# Everything is parsed, put together an email
 	mail = []
 	mail.append("Commit: %s" % (
@@ -167,6 +172,10 @@ def parse_commit_log(lines):
 	mail.append("Log Message")
 	mail.append("-----------")
 	mail.extend(commitmsg)
+	mail.append("")
+	mail.append("Branches")
+	mail.append("--------")
+	mail.append("\n".join([branch.strip(' *') for branch in branches]))
 	mail.append("")
 	mail.append("Modified Files")
 	mail.append("--------------")
