@@ -133,3 +133,27 @@ for the git user: ::
 	command="/home/git/gitwrap/gitwrap.py 'Some User'",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty ssh-rsa ABCDABCD<sshkeyhere>
 
 One row for each committer.
+
+
+anonymous mirror push script
+============================
+This script is set to push the repository (all branches) to the anonymous mirror,
+that is used for example for gitweb access. It's intended to be run from cron frequently
+(at least every 5 minutes, but every minute is even better..).
+
+The script has a simple lockfile based interlock to make sure it doesn't step on other
+instances of itself. It's probably a good idea to monitor this for stale lock files.
+
+The repository should be set up with a remote called "anonymous". This will be the
+target of the pushes.
+
+The user running the script must have an ssh private key set up with no passphrase to
+use for pushing.
+
+To run the script, simply set up a cronjob that runs: ::
+
+	/some/where/push_to_anon.sh /home/git/postgresql.git
+
+The script can be run with the ``--force`` parameter to have it send data even if it
+doesn't seem necessary. It might be a good idea to have an infrequent cronjob that
+does this.
