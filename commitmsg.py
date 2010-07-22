@@ -166,6 +166,7 @@ def parse_commit_log(lines):
 
 	# Everything is parsed, put together an email
 	mail = []
+	mail.append("")
 	mail.append("Commit: %s" % (
 			c.get('commitmsg', 'gitweb').replace('$action','commitdiff').replace('$commit', commitinfo[7:])))
 	mail.append("")
@@ -184,6 +185,8 @@ def parse_commit_log(lines):
 	mail.append("Modified Files")
 	mail.append("--------------")
 	mail.extend(diffstat)
+	mail.append("")
+	mail.append("")
 
 	msg = create_message("\n".join(mail),
 						 authorinfo[7:],
