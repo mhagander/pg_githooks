@@ -107,6 +107,7 @@ def parse_commit_log(lines):
 	
 	# Reset our parsing data
 	commitinfo = ""
+	committerinfo = ""
 	authorinfo = ""
 	dateinfo = ""
 	mergeinfo = ""
@@ -116,6 +117,8 @@ def parse_commit_log(lines):
 			break
 		elif l.startswith("commit "):
 			commitinfo = l
+		elif l.startswith("Commit: "):
+			committerinfo = l
 		elif l.startswith("Author: "):
 			authorinfo = l
 		elif l.startswith("Date:   "):
@@ -125,12 +128,14 @@ def parse_commit_log(lines):
 		else:
 			raise Exception("Unknown header line: %s" % l)
 
-	if not (commitinfo or authorinfo or dateinfo):
+	if not (commitinfo or committerinfo or authorinfo or dateinfo):
 		# If none of these existed, we must've hit the end of the log
 		return False
 	# Check for any individual piece that is missing
 	if not commitinfo:
 		raise Exception("Could not find commit hash!")
+	if not committerinfo:
+		raise Exception("Could not find committer!")
 	if not authorinfo:
 		raise Exception("Could not find author!")
 	if not dateinfo:
@@ -174,6 +179,11 @@ def parse_commit_log(lines):
 	mail.append("-----------")
 	mail.extend(commitmsg)
 	mail.append("")
+	if authorinfo != committerinfo:
+	    mail.append("Author")
+	    mail.append("------")
+	    mail.extend(authorinfo)
+	    mail.append("")
 	if len(branches) > 1:
 		mail.append("Branches")
 		mail.append("--------")
@@ -189,7 +199,7 @@ def parse_commit_log(lines):
 	mail.append("")
 
 	msg = create_message("\n".join(mail),
-						 authorinfo[7:],
+						 committerinfo[7:],
 						 c.get('commitmsg','subject').replace("$shortmsg",
 															  commitmsg[0][:80-len(c.get('commitmsg','subject'))]))
 	sendmail(msg)
@@ -292,7 +302,7 @@ if __name__ == "__main__":
 																	"Branch %s was removed" % ref)))
 		else:
 			# If both are real object ids, we can call git log on them
-			cmd = "git log %s..%s --stat" % (oldobj, newobj)
+			cmd = "git log %s..%s --stat --format=full" % (oldobj, newobj)
 			p = Popen(cmd, shell=True, stdout=PIPE)
 			lines = p.stdout.readlines()
 			lines.reverse()
