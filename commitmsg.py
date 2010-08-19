@@ -108,7 +108,7 @@ def parse_commit_log(lines):
 	# Reset our parsing data
 	commitinfo = ""
 	authorinfo = ""
-	dateinfo = ""
+	committerinfo = ""
 	mergeinfo = ""
 	while True:
 		l = lines.pop().strip()
@@ -118,14 +118,14 @@ def parse_commit_log(lines):
 			commitinfo = l
 		elif l.startswith("Author: "):
 			authorinfo = l
-		elif l.startswith("Date:   "):
-			dateinfo = l
+		elif l.startswith("Commit: "):
+			committerinfo = l
 		elif l.startswith("Merge: "):
 			mergeinfo = l
 		else:
 			raise Exception("Unknown header line: %s" % l)
 
-	if not (commitinfo or authorinfo or dateinfo):
+	if not (commitinfo or authorinfo):
 		# If none of these existed, we must've hit the end of the log
 		return False
 	# Check for any individual piece that is missing
@@ -133,8 +133,8 @@ def parse_commit_log(lines):
 		raise Exception("Could not find commit hash!")
 	if not authorinfo:
 		raise Exception("Could not find author!")
-	if not dateinfo:
-		raise Exception("Could not find commit date!")
+	if not committerinfo:
+		raise Exception("Could not find committer!")
 	
 	commitmsg = []
 	# We are in the commit message until we hit one line that doesn't start
@@ -169,6 +169,8 @@ def parse_commit_log(lines):
 	mail.append("")
 	mail.append("Commit: %s" % (
 			c.get('commitmsg', 'gitweb').replace('$action','commitdiff').replace('$commit', commitinfo[7:])))
+	if committerinfo[7:] != authorinfo[7:]:
+		mail.append(authorinfo) # already includes Author: part
 	mail.append("")
 	mail.append("Log Message")
 	mail.append("-----------")
@@ -189,7 +191,7 @@ def parse_commit_log(lines):
 	mail.append("")
 
 	msg = create_message("\n".join(mail),
-						 authorinfo[7:],
+						 committerinfo[7:],
 						 c.get('commitmsg','subject').replace("$shortmsg",
 															  commitmsg[0][:80-len(c.get('commitmsg','subject'))]))
 	sendmail(msg)
@@ -292,7 +294,7 @@ if __name__ == "__main__":
 																	"Branch %s was removed" % ref)))
 		else:
 			# If both are real object ids, we can call git log on them
-			cmd = "git log %s..%s --stat" % (oldobj, newobj)
+			cmd = "git log %s..%s --stat --format=full" % (oldobj, newobj)
 			p = Popen(cmd, shell=True, stdout=PIPE)
 			lines = p.stdout.readlines()
 			lines.reverse()
