@@ -294,7 +294,7 @@ if __name__ == "__main__":
 																	"Branch %s was removed" % ref)))
 		else:
 			# If both are real object ids, we can call git log on them
-			cmd = "git log %s..%s --stat --format=full" % (oldobj, newobj)
+			cmd = "git log %s..%s --stat --pretty=full" % (oldobj, newobj)
 			p = Popen(cmd, shell=True, stdout=PIPE)
 			lines = p.stdout.readlines()
 			lines.reverse()
