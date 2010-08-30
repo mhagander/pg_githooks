@@ -39,6 +39,9 @@ configuration for the script. It should contain something like: ::
 	subject = pgsql: $shortmsg
 	gitweb = http://git.postgresql.org/gitweb?p=postgresql.git;a=$action;h=$commit
 	debug = 0
+	commitmsg = 1
+	tagmsg = 1
+	branchmsg = 1
 
 Expansion variables are available for the following fields:
 
@@ -60,6 +63,9 @@ gitweb
   is a template URL for a gitweb link
 debug
   set to 1 to output data on console instead of sending email
+commitmsg, tagmsg, branchmsg
+  set to 0 to disable generating this type of message. If unspecified or
+  set to anything other than 0, the mail will be sent.
 
 
 git policy enforcement script

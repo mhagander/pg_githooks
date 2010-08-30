@@ -23,6 +23,9 @@
 # subject = pgsql: $shortmsg
 # gitweb = http://git.postgresql.org/gitweb?p=postgresql.git;a=$action;h=$commit
 # debug = 0
+# commitmsg = 1
+# tagmsg = 1
+# branchmsg = 1
 #
 # Expansion variables are available for the following fields:
 #  subject   -  shortmsg
@@ -34,6 +37,9 @@
 # subject          is the subject of the email
 # gitweb           is a template URL for a gitweb link
 # debug            set to 1 to output data on console instead of sending email
+# commitmsg        set to 0 to disable generation of commit mails
+# tagmsg           set to 0 to disable generation of tag creation mails
+# branchmsg        set to 0 to disable generation of branch creation mails
 #
 
 
@@ -55,6 +61,21 @@ try:
 except Exception, e:
 	print "Except: %s" % e
 	debug = 1
+
+def should_send_message(msgtype):
+	"""
+	Determine if a specific message type should be sent, by looking
+	in the ini file. Unless specifically disabled, all types are
+	sent.
+	"""
+	try:
+		sendit = int(c.get('commitmsg', '%smsg' % msgtype))
+		if sendit == 0:
+			return False
+		return True
+	except Exception, e:
+		return True
+
 
 allmail = []
 def sendmail(msg):
@@ -253,6 +274,8 @@ if __name__ == "__main__":
 			# old object being all zeroes means a new branch or tag was created
 			if ref.startswith("refs/heads/"):
 				# It's a branch!
+				if not should_send_message('branch'): continue
+
 				sendmail(
 					create_message("Branch %s was created.\n\nView: %s" % (
 							ref,
@@ -264,6 +287,8 @@ if __name__ == "__main__":
 			elif ref.startswith("refs/tags/"):
 				# It's a tag!
 				# It can be either an annotated tag or a lightweight one.
+				if not should_send_message('tag'): continue
+
 				p = Popen("git cat-file -t %s" % ref, shell=True, stdout=PIPE)
 				t = p.stdout.read().strip()
 				p.stdout.close()
@@ -287,6 +312,8 @@ if __name__ == "__main__":
 
 		elif newobj == "".zfill(40):
 			# new object being all zeroes means a branch was removed
+			if not should_send_message('branch'): continue
+
 			sendmail(
 				create_message("Branch %s was removed." % ref,
 							   c.get('commitmsg', 'fallbacksender'),
@@ -294,6 +321,8 @@ if __name__ == "__main__":
 																	"Branch %s was removed" % ref)))
 		else:
 			# If both are real object ids, we can call git log on them
+			if not should_send_message('commit'): continue
+
 			cmd = "git log %s..%s --stat --pretty=full" % (oldobj, newobj)
 			p = Popen(cmd, shell=True, stdout=PIPE)
 			lines = p.stdout.readlines()
