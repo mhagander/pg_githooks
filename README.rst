@@ -129,7 +129,7 @@ a file called ``gitwrap.ini`` with contents like this: ::
 
 	[paths]
 	logfile=/some/where/gitwrap.log
-	gitrepo=/some/where/repository.git
+	repobase=/some/where
 
 Make sure the git user has permissions on these directories.
 
@@ -140,6 +140,8 @@ for the git user: ::
 
 One row for each committer.
 
+The script will only allow access to repositories in the top level directory, and only
+those that already exist. All users will be granted access to all repositories.
 
 anonymous mirror push script
 ============================

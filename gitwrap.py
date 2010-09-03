@@ -14,7 +14,7 @@
 #
 # [paths]
 # logfile=/some/where/gitwrap.log
-# gitrepo=/some/where/repository.git
+# repobase=/some/where/
 #
 
 import sys
@@ -50,7 +50,7 @@ class PgGit(object):
 	def __init__(self, cfg):
 		self.cfg = cfg
 		self.logger = Logger(cfg)
-		self.path = "%s" % cfg.get('paths', 'gitrepo')
+		self.repobase = cfg.get('paths', 'repobase')
 
 	def parse_commandline(self):
 		if len(sys.argv) != 2:
@@ -75,8 +75,13 @@ class PgGit(object):
 		if not args.startswith("'/"):
 			raise InternalException("Expected git path to start with slash!")
 
-		if not self.path.endswith(args[2:].rstrip("'")):
-			raise InternalException("Incorrect repository path")
+		self.path = os.path.normpath("%s/%s" % (self.repobase, args[2:].rstrip("'")))
+		if not self.path.startswith(self.repobase):
+			raise InternalException("Attempt to escape root directory")
+		if not self.path.endswith(".git"):
+			raise InternalException("Repository paths must end in .git")
+		if not os.path.isdir(self.path):
+			raise InternalException("Repository does not exist")
 
 	def run_command(self):
 		self.logger.log("Running \"git shell %s %s\"" % (self.command, "'%s'" % self.path))
