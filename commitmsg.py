@@ -95,7 +95,10 @@ def flush_mail():
 		if debug == 1:
 			print msg
 		else:
-			pipe = Popen("sendmail -t", shell=True, stdin=PIPE).stdin
+			env = os.environ
+			# Add /usr/bin to the path, needed on debian
+			env["PATH"] += ":/usr/sbin"
+			pipe = Popen("sendmail -t", shell=True, env=env, stdin=PIPE).stdin
 			pipe.write(msg.as_string())
 			pipe.close()
 
