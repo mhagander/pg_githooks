@@ -41,8 +41,21 @@ except Exception, e:
 	print "Except: %s" % e
 	debug = 1
 
+class PolicyObject(object):
+	def _enforce(self, policyname):
+		"""
+		Check if a specific policy should be enforced, returning True/False
+		"""
+		try:
+			enf = int(c.get("policies", policyname))
+			if enf == 1:
+				return True
+			return False
+		except Exception,e:
+			return False
 
-class Commit(object):
+
+class Commit(PolicyObject):
 	"""
 	This class wraps a single commit, and the checking of policies on it.
 	"""
@@ -97,18 +110,6 @@ class Commit(object):
 			raise Exception("User '%s' on commit %s does not follow format rules." % (authorstring, self.commitid))
 		return m.group(1)
 
-	def _enforce(self, policyname):
-		"""
-		Check if a specific policy should be enforced, returning True/False
-		"""
-		try:
-			enf = int(c.get("policies", policyname))
-			if enf == 1:
-				return True
-			return False
-		except Exception,e:
-			return False
-
 	def _policyfail(self, msg):
 		"""
 		Indicate that a commit violated a policy, and abort the program with the
@@ -147,6 +148,30 @@ class Commit(object):
 		# Currently no policy for "authorlist" - expect committerequalsauthor+committerlist to be
 		# used in those cases.
 
+
+class Tag(PolicyObject):
+	def __init__(self, ref, name):
+		self.ref = ref
+		self.name = name
+
+	def check_policies(self):
+		if self._enforce("nolightweighttag"):
+			# A lightweight tag is a tag object, a "heavy" tag is
+			# a commit object.
+			p = Popen("git cat-file -t %s" % self.ref, shell=True, stdout=PIPE)
+			t = p.stdout.read().strip()
+			p.stdout.close()
+			if t == "commit":
+				self._policyfail("No lightweight tags allowed")
+
+	def _policyfail(self, msg):
+		"""
+		Indicate that a tag violated a policy, and abort the program with the
+		appropriate exitcode.
+		"""
+		print "Tag %s violates the policy: %s" % (self.name, msg)
+		sys.exit(1)
+
 if __name__ == "__main__":
 	# Get a list of refs on stdin, do something smart with it
 	ref = sys.argv[1]
@@ -161,8 +186,7 @@ if __name__ == "__main__":
 			pass
 		elif ref.startswith("refs/tags/"):
 			# It's a tag!
-			# We currently have no policies to enforce on this.
-			pass
+			Tag(newobj, ref).check_policies()
 		else:
 			raise Exception("Unknown branch/tag type %s" % ref)
 

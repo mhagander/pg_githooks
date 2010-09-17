@@ -91,6 +91,7 @@ configuration for the script. It should contain something like: ::
 	nomerge=1
 	committerequalsauthor=1
 	committerlist=1
+	nolightweighttags=1
 	
 	[committers]
 	Example User=example@example.org
@@ -111,6 +112,9 @@ committerlist
 	config file. This ensures that committers don't accidentally use a
 	badly configured client. All the commiters should be listed in the
 	[committers] section, in the format User Name=email.
+nolightweighttags
+	Enforce that there are no lightweight tags - only tags carrying
+	a description are allowed.
 
 
 git command wrapper script
