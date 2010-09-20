@@ -20,6 +20,7 @@
 import sys
 import os
 import os.path
+import datetime
 import ConfigParser
 
 ALLOWED_COMMANDS = ('git-upload-pack', 'git-receive-pack')
@@ -31,7 +32,7 @@ class Logger(object):
 
 	def log(self, message):
 		f = open(self.logfile,"a")
-		f.write("(%s): %s" % (self.user, message))
+		f.write("%s (%s): %s" % (datetime.datetime.now(), self.user, message))
 		f.write("\n")
 		f.close()
 
