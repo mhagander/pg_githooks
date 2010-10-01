@@ -105,7 +105,7 @@ class Commit(PolicyObject):
 
 		Returns the "name <email>" part.
 		"""
-		m = re.search('^([a-zA-Z0-9 ]+ <[^>]+>) \d+ [+-]\d{4}$', authorstring)
+		m = re.search('^([a-zA-Z0-9. ]+ <[^>]+>) \d+ [+-]\d{4}$', authorstring)
 		if not m:
 			raise Exception("User '%s' on commit %s does not follow format rules." % (authorstring, self.commitid))
 		return m.group(1)
