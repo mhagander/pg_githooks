@@ -135,9 +135,9 @@ class Commit(PolicyObject):
 
 		if self._enforce("committerlist"):
 			# Enforce specific committer listed in config file.
-			# We do this by splitting the name again, and doing a lookpu
+			# We do this by splitting the name again, and doing a lookup
 			# match on that.
-			m = re.search('^([a-zA-Z0-9 ]+) <([^>]+)>', self.committer)
+			m = re.search('^([a-zA-Z0-9. ]+) <([^>]+)>', self.committer)
 			if not m:
 				raise Exception("Committer '%s' for commit %s does not follow format rules." % (self.committer, self.commitid))
 			if not c.has_option('committers', m.group(1)):
