@@ -29,6 +29,7 @@ set -e
 
 cd $1
 M=$(find refs -type f -newer last_anonymous_push | grep -v refs/remotes/ | wc -l)
+M=$(($M + $(find packed-refs -type f -newer last_anonymous_push | wc -l)))
 if [ $M -gt 0 -o "$2" == "--force" ]; then
     # Perform push in interlock
     if [ ! -e /tmp/.git_repo_push.lck ]; then
