@@ -54,6 +54,20 @@ class PolicyObject(object):
 		except Exception,e:
 			return False
 
+	def _enforce_str(self, policyname):
+		"""
+		Check if a specific policy should be enforced, returning a string
+		containing the value of the policy, or None if the policy is not
+		specified or empty.
+		"""
+		try:
+			enf = c.get("policies", policyname).strip()
+			if enf == "":
+				return None
+			return enf
+		except Exception, e:
+			return None
+
 
 class Commit(PolicyObject):
 	"""
@@ -180,6 +194,12 @@ class Branch(PolicyObject):
 	def check_create(self):
 		if self._enforce("nobranchcreate"):
 			self._policyfail("No branch creation allowed")
+		if self._enforce_str("branchnamefilter"):
+			# All branch names starts with refs/heads/, so just remove that
+			# when doing the regexp match
+			if not re.match(self._enforce_str("branchnamefilter"),
+							self.name[11:]):
+				self._policyfail("Branch name does not match allowed regexp")
 
 	def check_remove(self):
 		if self._enforce("nobranchdelete"):

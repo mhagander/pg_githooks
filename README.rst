@@ -94,6 +94,7 @@ configuration for the script. It should contain something like: ::
 	nolightweighttags=1
 	nobranchcreate=1
 	nobranchremove=1
+	branchnamefilter=REL_\d+$
 	
 	[committers]
 	Example User=example@example.org
@@ -122,6 +123,16 @@ nobranchcreate
 nobranchdelete
 	Enforce that existing branches cannot be removed (by pushing a
 	branch with the name :*branch*)
+
+There are also policies that should be set to a string:
+
+branchnamefilter
+	Set to a regular expression that will be applied to all new branches
+	created. If the expression matches, the branch creation will be
+	allowed, otherwise not. The expression will always be anchored at
+	the beginning, but if you want it anchored at the end you need to
+	add a $ at the end. Setting *nobranchcreate* will override this
+	setting and not allow any branches at all.
 
 
 git command wrapper script
