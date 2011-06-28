@@ -92,6 +92,8 @@ configuration for the script. It should contain something like: ::
 	committerequalsauthor=1
 	committerlist=1
 	nolightweighttags=1
+	nobranchcreate=1
+	nobranchremove=1
 	
 	[committers]
 	Example User=example@example.org
@@ -115,6 +117,11 @@ committerlist
 nolightweighttags
 	Enforce that there are no lightweight tags - only tags carrying
 	a description are allowed.
+nobranchcreate
+	Enforce that new branches cannot be created.
+nobranchdelete
+	Enforce that existing branches cannot be removed (by pushing a
+	branch with the name :*branch*)
 
 
 git command wrapper script

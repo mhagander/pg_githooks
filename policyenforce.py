@@ -8,7 +8,7 @@
 # Note: the script (not surprisingly) uses the git commands in pipes, so git
 # needs to be available in the path.
 #
-# Copyright (C) 2010 PostgreSQL Global Development Group
+# Copyright (C) 2010-2011 PostgreSQL Global Development Group
 # Author: Magnus Hagander <magnus@hagander.net>
 #
 # Released under the PostgreSQL license
@@ -172,6 +172,27 @@ class Tag(PolicyObject):
 		print "Tag %s violates the policy: %s" % (self.name, msg)
 		sys.exit(1)
 
+class Branch(PolicyObject):
+	def __init__(self, ref, name):
+		self.ref = ref
+		self.name = name
+
+	def check_create(self):
+		if self._enforce("nobranchcreate"):
+			self._policyfail("No branch creation allowed")
+
+	def check_remove(self):
+		if self._enforce("nobranchdelete"):
+			self._policyfail("No branch removal allowed")
+
+	def _policyfail(self, msg):
+		"""
+		Indicate that a branch violated a policy, and abort the program with the
+		appropriate exitcode.
+		"""
+		print "Branch %s violates the policy: %s" % (self.name, msg)
+		sys.exit(1)
+
 if __name__ == "__main__":
 	# Get a list of refs on stdin, do something smart with it
 	ref = sys.argv[1]
@@ -182,8 +203,7 @@ if __name__ == "__main__":
 		# old object being all zeroes means a new branch or tag was created
 		if ref.startswith("refs/heads/"):
 			# It's a branch!
-			# We currently have no policies to enforce on this.
-			pass
+			Branch(newobj, ref).check_create()
 		elif ref.startswith("refs/tags/"):
 			# It's a tag!
 			Tag(newobj, ref).check_policies()
@@ -192,8 +212,7 @@ if __name__ == "__main__":
 
 	elif newobj == "".zfill(40):
 		# new object being all zeroes means a branch was removed
-		# We currently have no policies to enforce on this.
-		pass
+		Branch(newobj, ref).check_remove()
 	else:
 		# These are both real objects. Use git rev-list to identify
 		# exactly which ones they are, and apply policies as needed.
