@@ -93,7 +93,7 @@ configuration for the script. It should contain something like: ::
 	committerlist=1
 	nolightweighttags=1
 	nobranchcreate=1
-	nobranchremove=1
+	nobranchdelete=1
 	branchnamefilter=REL_\d+$
 	
 	[committers]
