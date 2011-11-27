@@ -26,6 +26,7 @@
 # commitmsg = 1
 # tagmsg = 1
 # branchmsg = 1
+# pingurl = http://somewhere.com/git_repo_updated
 #
 # Expansion variables are available for the following fields:
 #  subject   -  shortmsg
@@ -40,6 +41,10 @@
 # commitmsg        set to 0 to disable generation of commit mails
 # tagmsg           set to 0 to disable generation of tag creation mails
 # branchmsg        set to 0 to disable generation of branch creation mails
+# pingurl          when set to something, a http POST will be made to the
+#                  specified URL whenever run. Note that unlike some more
+#                  advanced git hooks, we just make an empty POST, we don't
+#                  (currently) include any information about what's in the pack.
 #
 
 
@@ -48,6 +53,7 @@ import os.path
 from subprocess import Popen, PIPE
 from email.mime.text import MIMEText
 from ConfigParser import ConfigParser
+import urllib
 
 cfgname = "%s/commitmsg.ini" % os.path.dirname(sys.argv[0])
 if not os.path.isfile(cfgname):
@@ -333,3 +339,10 @@ if __name__ == "__main__":
 				pass
 
 	flush_mail()
+
+	# Send of a http POST ping if there is something changed
+	if c.has_option('commitmsg', 'pingurl'):
+		pingurl = c.get('commitmsg', 'pingurl'))
+		# Make a http POST (the empty content makes it a POST)
+		ret = urllib.urlopen(pingurl, '').read()
+		# We ignore what the result is...
