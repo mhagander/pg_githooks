@@ -120,6 +120,12 @@ committerlist
 	config file. This ensures that committers don't accidentally use a
 	badly configured client. All the commiters should be listed in the
 	[committers] section, in the format User Name=email.
+authorlist
+	Enforce that the username and email of the author is listed in the
+	config file. It uses the same list of users as the committerlist,
+	thus it should be listed in [committers]. This allows one committer
+	to push things made by another committer, while still making sure
+	all authors are registered.
 nolightweighttags
 	Enforce that there are no lightweight tags - only tags carrying
 	a description are allowed.

@@ -8,7 +8,7 @@
 # Note: the script (not surprisingly) uses the git commands in pipes, so git
 # needs to be available in the path.
 #
-# Copyright (C) 2010-2011 PostgreSQL Global Development Group
+# Copyright (C) 2010-2013 PostgreSQL Global Development Group
 # Author: Magnus Hagander <magnus@hagander.net>
 #
 # Released under the PostgreSQL license
@@ -149,19 +149,23 @@ class Commit(PolicyObject):
 
 		if self._enforce("committerlist"):
 			# Enforce specific committer listed in config file.
-			# We do this by splitting the name again, and doing a lookup
-			# match on that.
-			m = re.search('^([a-zA-Z0-9. ]+) <([^>]+)>', self.committer)
-			if not m:
-				raise Exception("Committer '%s' for commit %s does not follow format rules." % (self.committer, self.commitid))
-			if not c.has_option('committers', m.group(1)):
-				self._policyfail("Committer %s not listed in committers section" % m.group(1))
-			if not c.get('committers', m.group(1)) == m.group(2):
-				self._policyfail("Committer %s has wrong email (%s, should be %s)" % (
-						m.group(1), m.group(2), c.get('committers', m.group(1))))
-		# Currently no policy for "authorlist" - expect committerequalsauthor+committerlist to be
-		# used in those cases.
+			self.enforce_user(self.committer, 'Committer')
 
+		if self._enforce("authorlist"):
+			# Enforce specific author is listed in config file (as committer).
+			self.enforce_user(self.author, 'Author')
+
+	def enforce_user(self, user, usertype):
+		# We do this by splitting the name again, and doing a lookup
+		# match on that.
+		m = re.search('^([a-zA-Z0-9. ]+) <([^>]+)>', user)
+		if not m:
+			raise Exception("%s '%s' for commit %s does not follow format rules." % (usertype, user, self.commitid))
+		if not c.has_option('committers', m.group(1)):
+			self._policyfail("%s %s not listed in committers section" % (usertype, m.group(1)))
+		if not c.get('committers', m.group(1)) == m.group(2):
+			self._policyfail("%s %s has wrong email (%s, should be %s)" % (
+				usertype, m.group(1), m.group(2), c.get('committers', m.group(1))))
 
 class Tag(PolicyObject):
 	def __init__(self, ref, name):
