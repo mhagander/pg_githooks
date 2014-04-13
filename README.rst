@@ -42,7 +42,7 @@ configuration for the script. It should contain something like: ::
 	commitmsg = 1
 	tagmsg = 1
 	branchmsg = 1
-	pingurl = 1
+	pingurl = http://somewhere.com/git_repo_updated
 
 Expansion variables are available for the following fields:
 
@@ -68,9 +68,10 @@ commitmsg, tagmsg, branchmsg
   set to 0 to disable generating this type of message. If unspecified or
   set to anything other than 0, the mail will be sent.
 pingurl
-  set to an URL to make the script send an empty HTTP post to this URL
+  set to one or more URLs to make the script send an empty HTTP post to this URL
   whenever something is received. This is useful for example to trigger
-  a redmine installation to pull the repository.
+  a redmine installation to pull the repository. Separate multiple URLs with
+  spaces.
 
 
 git policy enforcement script

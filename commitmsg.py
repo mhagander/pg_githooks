@@ -342,7 +342,10 @@ if __name__ == "__main__":
 
 	# Send of a http POST ping if there is something changed
 	if c.has_option('commitmsg', 'pingurl'):
-		pingurl = c.get('commitmsg', 'pingurl')
-		# Make a http POST (the empty content makes it a POST)
-		ret = urllib.urlopen(pingurl, '').read()
-		# We ignore what the result is...
+		for pingurl in c.get('commitmsg', 'pingurl').split(' '):
+			# Make a http POST (the empty content makes it a POST)
+			# We ignore what the result is, so we also ignore any exceptions.
+			try:
+				ret = urllib.urlopen(pingurl, '').read()
+			except:
+				pass
