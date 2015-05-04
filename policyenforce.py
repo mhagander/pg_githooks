@@ -24,6 +24,7 @@ import os.path
 import re
 from subprocess import Popen, PIPE
 from ConfigParser import ConfigParser
+import codecs
 
 #
 # Load the global config
@@ -32,7 +33,8 @@ cfgname = "%s/policyenforce.ini" % os.path.dirname(sys.argv[0])
 if not os.path.isfile(cfgname):
 	raise Exception("Config file '%s' is missing!" % cfgname)
 c = ConfigParser()
-c.read(cfgname)
+with codecs.open(cfgname, 'r', encoding='utf8') as f:
+	c.readfp(f)
 
 # Figure out if we should do debugging
 try:
@@ -119,7 +121,7 @@ class Commit(PolicyObject):
 
 		Returns the "name <email>" part.
 		"""
-		m = re.search('^([a-zA-Z0-9. ]+ <[^>]+>) \d+ [+-]\d{4}$', authorstring)
+		m = re.search('^([^<]+ <[^>]+>) \d+ [+-]\d{4}$', authorstring)
 		if not m:
 			raise Exception("User '%s' on commit %s does not follow format rules." % (authorstring, self.commitid))
 		return m.group(1)
@@ -129,7 +131,7 @@ class Commit(PolicyObject):
 		Indicate that a commit violated a policy, and abort the program with the
 		appropriate exitcode.
 		"""
-		print "Commit %s violates the policy: %s" % (self.commitid, msg)
+		print ("Commit %s violates the policy: %s" % (self.commitid, msg)).encode('utf8')
 		sys.exit(1)
 
 	def check_policies(self):
@@ -158,14 +160,15 @@ class Commit(PolicyObject):
 	def enforce_user(self, user, usertype):
 		# We do this by splitting the name again, and doing a lookup
 		# match on that.
-		m = re.search('^([a-zA-Z0-9. ]+) <([^>]+)>', user)
+		m = re.search('^([^<]+) <([^>]+)>', user)
 		if not m:
 			raise Exception("%s '%s' for commit %s does not follow format rules." % (usertype, user, self.commitid))
-		if not c.has_option('committers', m.group(1)):
-			self._policyfail("%s %s not listed in committers section" % (usertype, m.group(1)))
-		if not c.get('committers', m.group(1)) == m.group(2):
+		uname = unicode(m.group(1), 'utf8').lower()
+		if not c.has_option('committers', uname):
+			self._policyfail("%s %s not listed in committers section" % (usertype, uname))
+		if not c.get('committers', uname) == m.group(2):
 			self._policyfail("%s %s has wrong email (%s, should be %s)" % (
-				usertype, m.group(1), m.group(2), c.get('committers', m.group(1))))
+				usertype, uname, m.group(2), c.get('committers', uname)))
 
 class Tag(PolicyObject):
 	def __init__(self, ref, name):
