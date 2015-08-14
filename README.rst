@@ -54,7 +54,9 @@ gitweb
 The following fields are all available under the [commitmsg] header:
 
 destination
-  is the address to send commit messages to.
+  is the address to send commit messages to. Multiple addresses can be
+  specified with a comma in between, in which case multiple
+  independent messages will be sent.
 fallbacksender
   is the sender address to use for activities which don't have an author,
   such as creation/removal of a branch.

@@ -7,7 +7,7 @@
 # Note: the script (not surprisingly) uses the git commands in pipes, so git
 # needs to be available in the path.
 #
-# Copyright (C) 2010 PostgreSQL Global Development Group
+# Copyright (C) 2010-2015 PostgreSQL Global Development Group
 # Author: Magnus Hagander <magnus@hagander.net>
 #
 # Released under the PostgreSQL license
@@ -32,7 +32,9 @@
 #  subject   -  shortmsg
 #  gitweb    -  action, commit
 #
-# destination      is the address to send commit messages to.
+# destination      is the address to send commit messages to. Multiple addresses can
+#                  be specified with a comma in between, in which case multiple
+#                  independent messages will be sent.
 # fallbacksender   is the sender address to use for activities which don't have an
 #                  author, such as creation/removal of a branch.
 # subject          is the subject of the email
@@ -84,9 +86,19 @@ def should_send_message(msgtype):
 
 
 allmail = []
-def sendmail(msg):
-	allmail.append(msg)
+def sendmail(text, sender, subject):
+	for m in c.get('commitmsg', 'destination').split(','):
+		# Don't specify utf8 when doing debugging, because that will encode the output
+		# as base64 which is completely useless on the console...
+		if debug == 1:
+			msg = MIMEText(text)
+		else:
+			msg = MIMEText(text, _charset='utf-8')
+		msg['From'] = sender
+		msg['To'] = m
+		msg['Subject'] = subject
 
+		allmail.append(msg)
 
 def flush_mail():
 	"""
@@ -107,19 +119,6 @@ def flush_mail():
 			pipe = Popen("sendmail -t", shell=True, env=env, stdin=PIPE).stdin
 			pipe.write(msg.as_string())
 			pipe.close()
-
-			
-def create_message(text, sender, subject):
-	# Don't specify utf8 when doing a charset, because that will encode the output
-	# as base64 which is completely useless on the console...
-	if debug == 1:
-		msg = MIMEText(text)
-	else:
-		msg = MIMEText(text, _charset='utf-8')
-	msg['To'] = c.get('commitmsg', 'destination')
-	msg['From'] = sender
-	msg['Subject'] = subject
-	return msg
 
 	
 def parse_commit_log(lines):
@@ -219,11 +218,10 @@ def parse_commit_log(lines):
 	mail.append("")
 	mail.append("")
 
-	msg = create_message("\n".join(mail),
-						 committerinfo[7:],
-						 c.get('commitmsg','subject').replace("$shortmsg",
-															  commitmsg[0][:80-len(c.get('commitmsg','subject'))]))
-	sendmail(msg)
+	sendmail("\n".join(mail),
+			 committerinfo[7:],
+			 c.get('commitmsg','subject').replace("$shortmsg",
+												  commitmsg[0][:80-len(c.get('commitmsg','subject'))]))
 	return True
 
 def parse_annotated_tag(lines):
@@ -263,10 +261,9 @@ def parse_annotated_tag(lines):
 		mail.append(lines[i].rstrip())
 
 	# Ignore the commit it's referring to here
-	sendmail(
-		create_message("\n".join(mail),
-					   author,
-					   c.get('commitmsg','subject').replace('$shortmsg', 'Tag %s has been created.' % tagname)))
+	sendmail("\n".join(mail),
+			 author,
+			 c.get('commitmsg','subject').replace('$shortmsg', 'Tag %s has been created.' % tagname))
 	return
 
 if __name__ == "__main__":
@@ -284,14 +281,13 @@ if __name__ == "__main__":
 				# It's a branch!
 				if not should_send_message('branch'): continue
 
-				sendmail(
-					create_message("Branch %s was created.\n\nView: %s" % (
-							ref,
-							c.get('commitmsg', 'gitweb').replace('$action','shortlog').replace('$commit', ref),
-							),
-								   c.get('commitmsg', 'fallbacksender'),
-								   c.get('commitmsg','subject').replace("$shortmsg",
-																		"Branch %s was created" % ref)))
+				sendmail("Branch %s was created.\n\nView: %s" % (
+					ref,
+					c.get('commitmsg', 'gitweb').replace('$action','shortlog').replace('$commit', ref),
+				),
+						 c.get('commitmsg', 'fallbacksender'),
+						 c.get('commitmsg','subject').replace("$shortmsg",
+															  "Branch %s was created" % ref))
 			elif ref.startswith("refs/tags/"):
 				# It's a tag!
 				# It can be either an annotated tag or a lightweight one.
@@ -302,11 +298,10 @@ if __name__ == "__main__":
 				p.stdout.close()
 				if t == "commit":
 					# Lightweight tag with no further information
-					sendmail(
-						create_message("Tag %s was created.\n" % ref,
-									   c.get('commitmsg', 'fallbacksender'),
-									   c.get('commitmsg','subject').replace("$shortmsg",
-																			"Tag %s was created" % ref)))
+					sendmail("Tag %s was created.\n" % ref,
+							 c.get('commitmsg', 'fallbacksender'),
+							 c.get('commitmsg','subject').replace("$shortmsg",
+																  "Tag %s was created" % ref))
 				elif t == "tag":
 					# Annotated tag! Get the description!
 					p = Popen("git show %s" % ref, shell=True, stdout=PIPE)
@@ -322,11 +317,10 @@ if __name__ == "__main__":
 			# new object being all zeroes means a branch was removed
 			if not should_send_message('branch'): continue
 
-			sendmail(
-				create_message("Branch %s was removed." % ref,
-							   c.get('commitmsg', 'fallbacksender'),
-							   c.get('commitmsg','subject').replace("$shortmsg",
-																	"Branch %s was removed" % ref)))
+			sendmail("Branch %s was removed." % ref,
+					 c.get('commitmsg', 'fallbacksender'),
+					 c.get('commitmsg','subject').replace("$shortmsg",
+														  "Branch %s was removed" % ref))
 		else:
 			# If both are real object ids, we can call git log on them
 			if not should_send_message('commit'): continue
