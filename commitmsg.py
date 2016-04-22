@@ -205,13 +205,15 @@ def parse_commit_log(lines):
 		mail.append("------")
 	mail.append("\n".join([branch.strip(" *\r\n") for branch in branches]))
 	mail.append("")
-	mail.append("Details")
-	mail.append("-------")
-	mail.append(
-			c.get('commitmsg', 'gitweb').replace('$action','commitdiff').replace('$commit', commitinfo[7:]))
-	if committerinfo[7:] != authorinfo[7:]:
-		mail.append(authorinfo) # already includes Author: part
-	mail.append("")
+	if c.has_option('commitmsg', 'gitweb') or committerinfo[7:] != authorinfo[7:]:
+		mail.append("Details")
+		mail.append("-------")
+		if c.has_option('commitmsg', 'gitweb'):
+			mail.append(
+				c.get('commitmsg', 'gitweb').replace('$action','commitdiff').replace('$commit', commitinfo[7:]))
+		if committerinfo[7:] != authorinfo[7:]:
+			mail.append(authorinfo) # already includes Author: part
+		mail.append("")
 	mail.append("Modified Files")
 	mail.append("--------------")
 	mail.extend(diffstat)
