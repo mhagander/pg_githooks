@@ -7,7 +7,7 @@
 # Note: the script (not surprisingly) uses the git commands in pipes, so git
 # needs to be available in the path.
 #
-# Copyright (C) 2010-2015 PostgreSQL Global Development Group
+# Copyright (C) 2010-2016 PostgreSQL Global Development Group
 # Author: Magnus Hagander <magnus@hagander.net>
 #
 # Released under the PostgreSQL license
@@ -43,6 +43,9 @@
 # commitmsg        set to 0 to disable generation of commit mails
 # tagmsg           set to 0 to disable generation of tag creation mails
 # branchmsg        set to 0 to disable generation of branch creation mails
+# attacharchive    set to 1 to attach a complete .tar.gz file of the entire branch
+#                  that a commit was made on to the email. Only use this if the git
+#                  repository is small!!!
 # pingurl          when set to something, a http POST will be made to the
 #                  specified URL whenever run. Note that unlike some more
 #                  advanced git hooks, we just make an empty POST, we don't
@@ -54,6 +57,9 @@ import sys
 import os.path
 from subprocess import Popen, PIPE
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.nonmultipart import MIMENonMultipart
+from email import encoders
 from ConfigParser import ConfigParser
 import urllib
 
@@ -86,17 +92,26 @@ def should_send_message(msgtype):
 
 
 allmail = []
-def sendmail(text, sender, subject):
+def sendmail(text, sender, subject, archive=None):
 	for m in c.get('commitmsg', 'destination').split(','):
 		# Don't specify utf8 when doing debugging, because that will encode the output
 		# as base64 which is completely useless on the console...
-		if debug == 1:
-			msg = MIMEText(text)
-		else:
-			msg = MIMEText(text, _charset='utf-8')
+		msg = MIMEMultipart()
 		msg['From'] = sender
 		msg['To'] = m
 		msg['Subject'] = subject
+
+		if debug == 1:
+			msg.attach(MIMEText(text))
+		else:
+			msg.attach(MIMEText(text, _charset='utf-8'))
+
+		if archive:
+			part = MIMENonMultipart('application', 'x-gzip')
+			part.set_payload(archive)
+			part.add_header('Content-Disposition', 'attachment; filename="archive.tar.gz"')
+			encoders.encode_base64(part)
+			msg.attach(part)
 
 		allmail.append(msg)
 
@@ -220,10 +235,21 @@ def parse_commit_log(lines):
 	mail.append("")
 	mail.append("")
 
+	if len(branches) == 1 and c.has_option('commitmsg', 'attacharchive') and c.get('commitmsg', 'attacharchive') == '1':
+		# Archive the branch to a .tar.gz and send it (this is probably really
+		# slow on big archives, but that's not what it's supposed to be used for)
+		p = Popen("git archive %s | gzip -9" % branches[0].strip(" *\r\n"), shell=True, stdout=PIPE)
+		archive = p.stdout.read()
+		p.stdout.close()
+	else:
+		archive = None
+
 	sendmail("\n".join(mail),
 			 committerinfo[7:],
 			 c.get('commitmsg','subject').replace("$shortmsg",
-												  commitmsg[0][:80-len(c.get('commitmsg','subject'))]))
+												  commitmsg[0][:80-len(c.get('commitmsg','subject'))]),
+			 archive,
+	)
 	return True
 
 def parse_annotated_tag(lines):
