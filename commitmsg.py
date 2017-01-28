@@ -140,7 +140,7 @@ def flush_mail():
 			pipe.write(msg.as_string())
 			pipe.close()
 
-	
+
 def parse_commit_log(lines):
 	"""
 	Parse a single commit off the commitlog, which should be in an array
@@ -153,7 +153,7 @@ def parse_commit_log(lines):
 
 	if len(lines) == 0:
 		return False
-	
+
 	# Reset our parsing data
 	commitinfo = ""
 	authorinfo = ""
@@ -184,7 +184,7 @@ def parse_commit_log(lines):
 		raise Exception("Could not find author!")
 	if not committerinfo:
 		raise Exception("Could not find committer!")
-	
+
 	commitmsg = []
 	# We are in the commit message until we hit one line that doesn't start
 	# with four spaces (commit message).
