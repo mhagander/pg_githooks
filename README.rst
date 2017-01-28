@@ -78,6 +78,9 @@ pingurl
   whenever something is received. This is useful for example to trigger
   a redmine installation to pull the repository. Separate multiple URLs with
   spaces.
+  If $branch is included in the URL, insert the branchname in
+  that position, and if multiple branches are pushed then ping
+  all of them.
 
 
 git policy enforcement script

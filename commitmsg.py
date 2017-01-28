@@ -50,6 +50,9 @@
 #                  specified URL whenever run. Note that unlike some more
 #                  advanced git hooks, we just make an empty POST, we don't
 #                  (currently) include any information about what's in the pack.
+#                  If $branch is included in the URL, insert the branchname in
+#                  that position, and if multiple branches are pushed then ping
+#                  all of them.
 #
 
 
@@ -92,6 +95,8 @@ def should_send_message(msgtype):
 
 
 allmail = []
+allbranches = []
+
 def sendmail(text, sender, subject, archive=None):
 	for m in c.get('commitmsg', 'destination').split(','):
 		# Don't specify utf8 when doing debugging, because that will encode the output
@@ -207,6 +212,7 @@ def parse_commit_log(lines):
 	p = Popen("git branch --contains %s" % commitinfo[7:], shell=True, stdout=PIPE)
 	branches = p.stdout.readlines()
 	p.stdout.close()
+	allbranches.extend([branch.strip(" *\r\n") for branch in branches])
 
 	# Everything is parsed, put together an email
 	mail = []
@@ -364,7 +370,19 @@ if __name__ == "__main__":
 
 	# Send of a http POST ping if there is something changed
 	if c.has_option('commitmsg', 'pingurl'):
+		pingurls = []
+		# First build a list of all the URLs to ping, there could
+		# be more than one.
 		for pingurl in c.get('commitmsg', 'pingurl').split(' '):
+			if pingurl.find('$branch') >= 0:
+				# Branch is included, possibly send multiple
+				for b in allbranches:
+					pingurls.append(pingurl.replace('$branch', b))
+			else:
+				pingurls.append(pingurl)
+
+		# Then actuall ping them all
+		for pingurl in pingurls:
 			# Make a http POST (the empty content makes it a POST)
 			# We ignore what the result is, so we also ignore any exceptions.
 			try:
