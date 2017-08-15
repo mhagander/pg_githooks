@@ -101,6 +101,7 @@ configuration for the script. It should contain something like: ::
 
 	[policyenforce]
 	debug = 0
+	gpghome=/some/where/
 	
 	[policies]
 	nomerge=1
@@ -110,6 +111,8 @@ configuration for the script. It should contain something like: ::
 	nobranchcreate=1
 	nobranchdelete=1
 	branchnamefilter=REL_\d+$
+	signcommits=1
+	signtags=1
 	
 	[committers]
 	Example User=example@example.org
@@ -121,6 +124,10 @@ enforce the check, or 0 (or non-existant) to disable the check.
 nomerge
 	Enforce no merge commits. It's recommended that you use the core
 	git feature for this as well (denyNonFastforwards = true).
+signcommits
+	Enforce that commits are GPG signed
+signtags
+	Enforce that tags are GPG signed
 committerequalsauthor
 	Enforce that the user listed under "committer" is the same as that
 	under "author". This is for projects that track authors in the text

@@ -90,7 +90,7 @@ class Commit(PolicyObject):
 		# Get the basic info about the commit using git cat-file
 		p = Popen("git cat-file commit %s" % commitid, shell=True, stdout=PIPE)
 		for l in p.stdout:
-			if l == "\n":
+			if re.match('^(\s+)$', l):
 				break
 			elif l.startswith("tree "):
 				self.tree = l[5:].strip()
@@ -100,6 +100,8 @@ class Commit(PolicyObject):
 				self.author = self._parse_author(l[7:].strip())
 			elif l.startswith("committer "):
 				self.committer = self._parse_author(l[10:].strip())
+			elif l.startswith("gpgsig "):
+				pass
 			else:
 				raise Exception("Unknown commit info line for commit %s: %s" % (commitid, l))
 		p.stdout.close()
@@ -157,6 +159,19 @@ class Commit(PolicyObject):
 			# Enforce specific author is listed in config file (as committer).
 			self.enforce_user(self.author, 'Author')
 
+		if self._enforce("signcommits"):
+			# Enforce that all commits are signed
+			e = os.environ.copy()
+			e['GNUPGHOME'] = c.get('policyenforce', 'gpghome')
+			p = Popen("git verify-commit %s" % self.commitid, shell=True, stderr=PIPE, env=e)
+			for l in p.stderr:
+				if l.startswith('gpg: Good signature from'):
+					if debug:
+						print "Signature verified: %s" % l
+					break
+			else:
+				self._policyfail("Commit is not signed by a trusted key")
+
 	def enforce_user(self, user, usertype):
 		# We do this by splitting the name again, and doing a lookup
 		# match on that.
@@ -184,6 +199,19 @@ class Tag(PolicyObject):
 			p.stdout.close()
 			if t == "commit":
 				self._policyfail("No lightweight tags allowed")
+
+		if self._enforce("signtags"):
+			# Enforce that all tags are signed
+			e = os.environ.copy()
+			e['GNUPGHOME'] = c.get('policyenforce', 'gpghome')
+			p = Popen("git verify-tag %s" % self.ref, shell=True, stderr=PIPE, env=e)
+			for l in p.stderr:
+				if l.startswith('gpg: Good signature from'):
+					if debug:
+						print "Signature verified: %s" % l
+					break
+			else:
+				self._policyfail("Tag is not signed by a trusted key")
 
 	def _policyfail(self, msg):
 		"""
