@@ -386,6 +386,10 @@ if __name__ == "__main__":
 			# Make a http POST (the empty content makes it a POST)
 			# We ignore what the result is, so we also ignore any exceptions.
 			try:
-				ret = urllib.urlopen(pingurl, '').read()
+				ret = urllib.urlopen(pingurl, '')
+				l = ret.readline()
+				# Consume the rest of the input
+				ret.read()
+				print "PING: %s" % l.strip()
 			except:
-				pass
+				print "ERROR: Failed to ping url with update!"
