@@ -306,6 +306,12 @@ if __name__ == "__main__":
 		l = sys.stdin.readline()
 		if not l: break
 
+		# If no receiver is defined, just eat up all the input but don't send
+		# any email. We still want to run to completion so that we can send
+		# the pingurls, if any
+		if not c.has_option('commitmsg', 'destination'):
+			continue
+
 		(oldobj, newobj, ref) = l.split()
 
 		# Build the email
