@@ -7,7 +7,7 @@
 # Note: the script (not surprisingly) uses the git commands in pipes, so git
 # needs to be available in the path.
 #
-# Copyright (C) 2010-2016 PostgreSQL Global Development Group
+# Copyright (C) 2010-2018 PostgreSQL Global Development Group
 # Author: Magnus Hagander <magnus@hagander.net>
 #
 # Released under the PostgreSQL license
@@ -98,6 +98,9 @@ allmail = []
 allbranches = []
 
 def sendmail(text, sender, subject, archive=None):
+	if not c.has_option('commitmsg', 'destination'):
+		return
+
 	for m in c.get('commitmsg', 'destination').split(','):
 		msg = MIMEMultipart()
 		msg['From'] = sender
@@ -305,12 +308,6 @@ if __name__ == "__main__":
 	while True:
 		l = sys.stdin.readline()
 		if not l: break
-
-		# If no receiver is defined, just eat up all the input but don't send
-		# any email. We still want to run to completion so that we can send
-		# the pingurls, if any
-		if not c.has_option('commitmsg', 'destination'):
-			continue
 
 		(oldobj, newobj, ref) = l.split()
 
