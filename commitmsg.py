@@ -144,7 +144,7 @@ def flush_mail():
 			pipe.close()
 
 
-def parse_commit_log(lines):
+def parse_commit_log(do_send_mail, lines):
 	"""
 	Parse a single commit off the commitlog, which should be in an array
 	of lines, generate a commit message, and send it.
@@ -216,6 +216,11 @@ def parse_commit_log(lines):
 	branches = p.stdout.readlines()
 	p.stdout.close()
 	allbranches.extend([branch.strip(" *\r\n") for branch in branches])
+
+	# We have now collected all data. If we're not going to actually send the mail,
+	# now is the time to bail.
+	if not do_send_mail:
+		return True
 
 	# Everything is parsed, put together an email
 	mail = []
@@ -305,6 +310,8 @@ def parse_annotated_tag(lines):
 
 if __name__ == "__main__":
 	# Get a list of refs on stdin, do something smart with it
+	do_send_mail = c.has_option('commitmsg', 'destination')
+
 	while True:
 		l = sys.stdin.readline()
 		if not l: break
@@ -316,6 +323,7 @@ if __name__ == "__main__":
 			# old object being all zeroes means a new branch or tag was created
 			if ref.startswith("refs/heads/"):
 				# It's a branch!
+				if not do_send_mail: continue
 				if not should_send_message('branch'): continue
 
 				sendmail("Branch %s was created.\n\nView: %s" % (
@@ -328,6 +336,7 @@ if __name__ == "__main__":
 			elif ref.startswith("refs/tags/"):
 				# It's a tag!
 				# It can be either an annotated tag or a lightweight one.
+				if not do_send_mail: continue
 				if not should_send_message('tag'): continue
 
 				p = Popen("git cat-file -t %s" % ref, shell=True, stdout=PIPE)
@@ -352,6 +361,7 @@ if __name__ == "__main__":
 
 		elif newobj == "".zfill(40):
 			# new object being all zeroes means a branch was removed
+			if not do_send_mail: continue
 			if not should_send_message('branch'): continue
 
 			sendmail("Branch %s was removed." % ref,
@@ -366,7 +376,7 @@ if __name__ == "__main__":
 			p = Popen(cmd, shell=True, stdout=PIPE)
 			lines = p.stdout.readlines()
 			lines.reverse()
-			while parse_commit_log(lines):
+			while parse_commit_log(do_send_mail, lines):
 				pass
 
 	flush_mail()
