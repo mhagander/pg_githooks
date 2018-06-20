@@ -99,13 +99,13 @@ allbranches = []
 
 def sendmail(text, sender, subject, archive=None):
 	for m in c.get('commitmsg', 'destination').split(','):
-		# Don't specify utf8 when doing debugging, because that will encode the output
-		# as base64 which is completely useless on the console...
 		msg = MIMEMultipart()
 		msg['From'] = sender
 		msg['To'] = m
 		msg['Subject'] = subject
 
+		# Don't specify utf8 when doing debugging, because that will encode the output
+		# as base64 which is completely useless on the console...
 		if debug == 1:
 			msg.attach(MIMEText(text))
 		else:
