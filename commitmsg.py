@@ -64,7 +64,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.nonmultipart import MIMENonMultipart
 from email import encoders
 from configparser import ConfigParser
-import urllib.request
+import requests
 
 cfgname = "%s/commitmsg.ini" % os.path.dirname(sys.argv[0])
 if not os.path.isfile(cfgname):
@@ -417,10 +417,11 @@ if __name__ == "__main__":
             # Make a http POST (the empty content makes it a POST)
             # We ignore what the result is, so we also ignore any exceptions.
             try:
-                ret = urllib.request.urlopen(pingurl, '')
-                l = ret.readline()
-                # Consume the rest of the input
-                ret.read()
-                print("PING: %s" % l.strip())
-            except:
-                print("ERROR: Failed to ping url with update!")
+                r = requests.post(pingurl)
+                if r.status_code == 200:
+                    for l in r.text.splitlines():
+                        print("PING: {0}".format(l))
+                else:
+                    print("ERROR: status {0} {1} from ping!".format(r.status_code, r.reason))
+            except Exception as e:
+                print("ERROR: Exception when pinging!")
