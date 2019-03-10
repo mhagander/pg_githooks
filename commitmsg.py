@@ -63,6 +63,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.nonmultipart import MIMENonMultipart
 from email import encoders
+import email.utils
+import smtplib
 from configparser import ConfigParser
 import requests
 
@@ -103,6 +105,8 @@ def sendmail(text, sender, subject, archive=None):
     if not c.has_option('commitmsg', 'destination'):
         return
 
+    (sender_name, sender_address) = email.utils.parseaddr(sender)
+
     for m in c.get('commitmsg', 'destination').split(','):
         msg = MIMEMultipart()
         msg['From'] = sender
@@ -123,7 +127,11 @@ def sendmail(text, sender, subject, archive=None):
             encoders.encode_base64(part)
             msg.attach(part)
 
-        allmail.append(msg)
+        allmail.append({
+            'sender': sender_address,
+            'to': m,
+            'msg': msg,
+        })
 
 
 def flush_mail():
@@ -137,14 +145,11 @@ def flush_mail():
     # correct order.
     for msg in reversed(allmail):
         if debug == 1:
-            print(msg)
+            print(msg['msg'])
         else:
-            env = os.environ
-            # Add /usr/bin to the path, needed on debian
-            env["PATH"] += ":/usr/sbin"
-            pipe = Popen("sendmail -t", shell=True, env=env, stdin=PIPE).stdin
-            pipe.write(msg.as_string().encode('utf8'))
-            pipe.close()
+            smtp = smtplib.SMTP("localhost")
+            smtp.sendmail(msg['sender'], msg['to'], msg['msg'].as_string().encode('utf8'))
+            smtp.close()
 
 
 def parse_commit_log(do_send_mail, lines):
