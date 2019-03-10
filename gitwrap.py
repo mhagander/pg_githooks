@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #
 # Simple wrapper around the git commands to ensure that we only speak
@@ -21,7 +21,7 @@ import sys
 import os
 import os.path
 import datetime
-import ConfigParser
+import configparser
 
 ALLOWED_COMMANDS = ('git-upload-pack', 'git-receive-pack')
 
@@ -96,17 +96,17 @@ class PgGit(object):
             self.parse_commandline()
             self.parse_command()
             self.run_command()
-        except InternalException, e:
+        except InternalException as e:
             try:
                 self.logger.log(e)
-            except Exception, e:
+            except Exception as e:
                 pass
             sys.stderr.write("%s\n" % e)
             sys.exit(1)
-        except Exception, e:
+        except Exception as e:
             try:
                 self.logger.log(e)
-            except Exception, e:
+            except Exception as e:
                 # If we failed to log, try once more with a new logger, otherwise,
                 # just accept that we failed.
                 try:
@@ -118,6 +118,6 @@ class PgGit(object):
 
 
 if __name__ == "__main__":
-    c = ConfigParser.ConfigParser()
+    c = configparser.ConfigParser()
     c.read("%s/gitwrap.ini" % os.path.abspath(sys.path[0]))
     PgGit(c).run()

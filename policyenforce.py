@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # This is a simple policy enforcement script for the PostgreSQL project
 # git server.
@@ -23,7 +23,7 @@ import sys
 import os.path
 import re
 from subprocess import Popen, PIPE
-from ConfigParser import ConfigParser
+from configparser import ConfigParser
 import codecs
 
 #
@@ -39,8 +39,8 @@ with codecs.open(cfgname, 'r', encoding='utf8') as f:
 # Figure out if we should do debugging
 try:
     debug = int(c.get('policyenforce', 'debug'))
-except Exception, e:
-    print "Except: %s" % e
+except Exception as e:
+    print("Except: %s" % e)
     debug = 1
 
 
@@ -68,7 +68,7 @@ class PolicyObject(object):
             if enf == "":
                 return None
             return enf
-        except Exception, e:
+        except Exception as e:
             return None
 
 
@@ -91,6 +91,7 @@ class Commit(PolicyObject):
         # Get the basic info about the commit using git cat-file
         p = Popen("git cat-file commit %s" % commitid, shell=True, stdout=PIPE)
         for l in p.stdout:
+            l = l.decode('utf8', errors='ignore')
             if re.match('^(\s+)$', l):
                 break
             elif l.startswith("tree "):
@@ -134,7 +135,7 @@ class Commit(PolicyObject):
         Indicate that a commit violated a policy, and abort the program with the
         appropriate exitcode.
         """
-        print("Commit %s violates the policy: %s" % (self.commitid, msg)).encode('utf8')
+        print("Commit %s violates the policy: %s" % (self.commitid, msg))
         sys.exit(1)
 
     def check_policies(self):
@@ -168,7 +169,7 @@ class Commit(PolicyObject):
             for l in p.stderr:
                 if l.startswith('gpg: Good signature from'):
                     if debug:
-                        print "Signature verified: %s" % l
+                        print("Signature verified: %s" % l)
                     break
             else:
                 self._policyfail("Commit is not signed by a trusted key")
@@ -179,7 +180,7 @@ class Commit(PolicyObject):
         m = re.search('^([^<]+) <([^>]+)>', user)
         if not m:
             raise Exception("%s '%s' for commit %s does not follow format rules." % (usertype, user, self.commitid))
-        uname = unicode(m.group(1), 'utf8').lower()
+        uname = str(m.group(1)).lower()
         if not c.has_option('committers', uname):
             self._policyfail("%s %s not listed in committers section" % (usertype, uname))
         if not c.get('committers', uname) == m.group(2):
@@ -210,7 +211,7 @@ class Tag(PolicyObject):
             for l in p.stderr:
                 if l.startswith('gpg: Good signature from'):
                     if debug:
-                        print "Signature verified: %s" % l
+                        print("Signature verified: %s" % l)
                     break
             else:
                 self._policyfail("Tag is not signed by a trusted key")
@@ -220,7 +221,7 @@ class Tag(PolicyObject):
         Indicate that a tag violated a policy, and abort the program with the
         appropriate exitcode.
         """
-        print "Tag %s violates the policy: %s" % (self.name, msg)
+        print("Tag %s violates the policy: %s" % (self.name, msg))
         sys.exit(1)
 
 
@@ -248,7 +249,7 @@ class Branch(PolicyObject):
         Indicate that a branch violated a policy, and abort the program with the
         appropriate exitcode.
         """
-        print "Branch %s violates the policy: %s" % (self.name, msg)
+        print("Branch %s violates the policy: %s" % (self.name, msg))
         sys.exit(1)
 
 
@@ -278,11 +279,11 @@ if __name__ == "__main__":
         p = Popen("git rev-list %s..%s" % (oldobj, newobj), shell=True, stdout=PIPE)
         for l in p.stdout:
             if debug:
-                print "Checking commit %s" % l.strip()
-            Commit(l.strip()).check_policies()
+                print("Checking commit %s" % l.decode('utf8', errors='ignore').strip())
+            Commit(l.decode('utf8', errors='ignore').strip()).check_policies()
             if debug:
-                print "Commit ok."
+                print("Commit ok.")
 
     if debug:
-        print "In debugging mode, refusing push unconditionally."
+        print("In debugging mode, refusing push unconditionally.")
         sys.exit(1)

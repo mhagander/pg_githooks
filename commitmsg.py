@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # This is a simple script to generate commit messages formatted in the way
 # the PostgreSQL projects prefer them. Anybody else is of course also
@@ -63,8 +63,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.nonmultipart import MIMENonMultipart
 from email import encoders
-from ConfigParser import ConfigParser
-import urllib
+from configparser import ConfigParser
+import urllib.request
 
 cfgname = "%s/commitmsg.ini" % os.path.dirname(sys.argv[0])
 if not os.path.isfile(cfgname):
@@ -75,8 +75,8 @@ c.read(cfgname)
 # Figure out if we should do debugging
 try:
     debug = int(c.get('commitmsg', 'debug'))
-except Exception, e:
-    print "Except: %s" % e
+except Exception as e:
+    print("Except: %s" % e)
     debug = 1
 
 
@@ -91,7 +91,7 @@ def should_send_message(msgtype):
         if sendit == 0:
             return False
         return True
-    except Exception, e:
+    except Exception as e:
         return True
 
 
@@ -137,13 +137,13 @@ def flush_mail():
     # correct order.
     for msg in reversed(allmail):
         if debug == 1:
-            print msg
+            print(msg)
         else:
             env = os.environ
             # Add /usr/bin to the path, needed on debian
             env["PATH"] += ":/usr/sbin"
             pipe = Popen("sendmail -t", shell=True, env=env, stdin=PIPE).stdin
-            pipe.write(msg.as_string())
+            pipe.write(msg.as_string().encode('utf8'))
             pipe.close()
 
 
@@ -166,7 +166,7 @@ def parse_commit_log(do_send_mail, lines):
     committerinfo = ""
     mergeinfo = ""
     while True:
-        l = lines.pop().strip()
+        l = lines.pop().decode('utf8', errors='ignore').strip()
         if l == "":
             break
         elif l.startswith("commit "):
@@ -195,7 +195,7 @@ def parse_commit_log(do_send_mail, lines):
     # We are in the commit message until we hit one line that doesn't start
     # with four spaces (commit message).
     while len(lines):
-        l = lines.pop()
+        l = lines.pop().decode('utf8', errors='ignore')
         if l.startswith("    "):
             # Remove the 4 leading spaces and any trailing spaces
             commitmsg.append(l[4:].rstrip())
@@ -204,7 +204,7 @@ def parse_commit_log(do_send_mail, lines):
 
     diffstat = []
     while len(lines):
-        l = lines.pop()
+        l = lines.pop().decode('utf8', errors='ignore')
         if l.strip() == "":
             break
         if not l.startswith(" "):
@@ -217,9 +217,9 @@ def parse_commit_log(do_send_mail, lines):
 
     # Figure out affected branches
     p = Popen("git branch --contains %s" % commitinfo[7:], shell=True, stdout=PIPE)
-    branches = p.stdout.readlines()
+    branches = [b.decode('utf8', errors='ignore').strip(" *\r\n") for b in p.stdout.readlines()]
     p.stdout.close()
-    allbranches.extend([branch.strip(" *\r\n") for branch in branches])
+    allbranches.extend(branches)
 
     # We have now collected all data. If we're not going to actually send the mail,
     # now is the time to bail.
@@ -236,7 +236,7 @@ def parse_commit_log(do_send_mail, lines):
     else:
         mail.append("Branch")
         mail.append("------")
-    mail.append("\n".join([branch.strip(" *\r\n") for branch in branches]))
+    mail.append("\n".join(branches))
     mail.append("")
     if c.has_option('commitmsg', 'gitweb') or committerinfo[7:] != authorinfo[7:]:
         mail.append("Details")
@@ -256,7 +256,7 @@ def parse_commit_log(do_send_mail, lines):
     if len(branches) == 1 and c.has_option('commitmsg', 'attacharchive') and c.get('commitmsg', 'attacharchive') == '1':
         # Archive the branch to a .tar.gz and send it (this is probably really
         # slow on big archives, but that's not what it's supposed to be used for)
-        p = Popen("git archive %s | gzip -9" % branches[0].strip(" *\r\n"), shell=True, stdout=PIPE)
+        p = Popen("git archive %s | gzip -9" % branches[0], shell=True, stdout=PIPE)
         archive = p.stdout.read()
         p.stdout.close()
     else:
@@ -417,10 +417,10 @@ if __name__ == "__main__":
             # Make a http POST (the empty content makes it a POST)
             # We ignore what the result is, so we also ignore any exceptions.
             try:
-                ret = urllib.urlopen(pingurl, '')
+                ret = urllib.request.urlopen(pingurl, '')
                 l = ret.readline()
                 # Consume the rest of the input
                 ret.read()
-                print "PING: %s" % l.strip()
+                print("PING: %s" % l.strip())
             except:
-                print "ERROR: Failed to ping url with update!"
+                print("ERROR: Failed to ping url with update!")
