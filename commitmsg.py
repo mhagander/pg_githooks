@@ -20,6 +20,7 @@
 # [commitmsg]
 # destination = somewhere@somewhere.com
 # fallbacksender = somewhere@somewhere.com
+# forcesenderaddr = magnus+force@hagander.net
 # subject = pgsql: $shortmsg
 # gitweb = http://git.postgresql.org/gitweb?p=postgresql.git;a=$action;h=$commit
 # debug = 0
@@ -37,6 +38,10 @@
 #                  independent messages will be sent.
 # fallbacksender   is the sender address to use for activities which don't have an
 #                  author, such as creation/removal of a branch.
+# forcesenderaddr  is the email address to use as sender of email, when an author can
+#                  be found. In this case the name of the sender will be taken from
+#                  the commit record, but the address is forced to the one specified
+#                  here (to ensure DKIM compliance)
 # subject          is the subject of the email
 # gitweb           is a template URL for a gitweb link
 # debug            set to 1 to output data on console instead of sending email
@@ -107,9 +112,17 @@ def sendmail(text, sender, subject, archive=None):
 
     (sender_name, sender_address) = email.utils.parseaddr(sender)
 
+    if c.has_option('commitmsg', 'forcesenderaddr'):
+        sender_address = c.get('commitmsg', 'forcesenderaddr')
+
+    if sender_name:
+        fullsender = "{0} <{1}>".format(sender_name, sender_address)
+    else:
+        fullsender = sender_address
+
     for m in c.get('commitmsg', 'destination').split(','):
         msg = MIMEMultipart()
-        msg['From'] = sender
+        msg['From'] = fullsender
         msg['To'] = m
         msg['Subject'] = subject
 

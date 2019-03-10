@@ -36,6 +36,7 @@ configuration for the script. It should contain something like: ::
 	[commitmsg]
 	destination = somewhere@somewhere.com
 	fallbacksender = somewhere@somewhere.com
+	forcesenderaddr = noreply@somewhere.com
 	subject = pgsql: $shortmsg
 	gitweb = http://git.postgresql.org/gitweb?p=postgresql.git;a=$action;h=$commit
 	debug = 0
@@ -60,6 +61,11 @@ destination
 fallbacksender
   is the sender address to use for activities which don't have an author,
   such as creation/removal of a branch.
+forcesenderaddr
+  is the email address to use as sender of email, when an author can
+  be found. In this case the name of the sender will be taken from
+  the commit record, but the address is forced to the one specified
+  here (to ensure DKIM compliance)
 subject
   is the subject of the email
 gitweb
