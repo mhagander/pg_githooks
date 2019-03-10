@@ -25,13 +25,14 @@ import ConfigParser
 
 ALLOWED_COMMANDS = ('git-upload-pack', 'git-receive-pack')
 
+
 class Logger(object):
     def __init__(self, cfg):
         self.user = "Unknown"
-        self.logfile = cfg.get('paths','logfile')
+        self.logfile = cfg.get('paths', 'logfile')
 
     def log(self, message):
-        f = open(self.logfile,"a")
+        f = open(self.logfile, "a")
         f.write("%s (%s): %s" % (datetime.datetime.now(), self.user, message))
         f.write("\n")
         f.close()
@@ -40,8 +41,10 @@ class Logger(object):
         if user:
             self.user = user
 
+
 class InternalException(Exception):
     pass
+
 
 class PgGit(object):
     user = None
@@ -67,9 +70,9 @@ class PgGit(object):
         # env contains "git-<command> <argument>" or "git <command> <argument>"
         command, args = env.split(None, 1)
         if command == "git":
-            subcommand, args = args.split(None,1)
+            subcommand, args = args.split(None, 1)
             command = "git-%s" % subcommand
-        if not command in ALLOWED_COMMANDS:
+        if command not in ALLOWED_COMMANDS:
             raise InternalException("Command '%s' not allowed" % command)
 
         self.command = command
@@ -86,7 +89,7 @@ class PgGit(object):
 
     def run_command(self):
         self.logger.log("Running \"git shell %s %s\"" % (self.command, "'%s'" % self.path))
-        os.execvp('git', ['git', 'shell', '-c', "%s %s" % (self.command, "'%s'" % self.path) ])
+        os.execvp('git', ['git', 'shell', '-c', "%s %s" % (self.command, "'%s'" % self.path)])
 
     def run(self):
         try:
@@ -112,6 +115,7 @@ class PgGit(object):
                     pass
             sys.stderr.write("An unhandled exception occurred on the server\n")
             sys.exit(1)
+
 
 if __name__ == "__main__":
     c = ConfigParser.ConfigParser()

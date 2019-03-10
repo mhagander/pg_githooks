@@ -43,6 +43,7 @@ except Exception, e:
     print "Except: %s" % e
     debug = 1
 
+
 class PolicyObject(object):
     def _enforce(self, policyname):
         """
@@ -53,7 +54,7 @@ class PolicyObject(object):
             if enf == 1:
                 return True
             return False
-        except Exception,e:
+        except Exception as e:
             return False
 
     def _enforce_str(self, policyname):
@@ -133,7 +134,7 @@ class Commit(PolicyObject):
         Indicate that a commit violated a policy, and abort the program with the
         appropriate exitcode.
         """
-        print ("Commit %s violates the policy: %s" % (self.commitid, msg)).encode('utf8')
+        print("Commit %s violates the policy: %s" % (self.commitid, msg)).encode('utf8')
         sys.exit(1)
 
     def check_policies(self):
@@ -185,6 +186,7 @@ class Commit(PolicyObject):
             self._policyfail("%s %s has wrong email (%s, should be %s)" % (
                 usertype, uname, m.group(2), c.get('committers', uname)))
 
+
 class Tag(PolicyObject):
     def __init__(self, ref, name):
         self.ref = ref
@@ -221,6 +223,7 @@ class Tag(PolicyObject):
         print "Tag %s violates the policy: %s" % (self.name, msg)
         sys.exit(1)
 
+
 class Branch(PolicyObject):
     def __init__(self, ref, name):
         self.ref = ref
@@ -247,6 +250,7 @@ class Branch(PolicyObject):
         """
         print "Branch %s violates the policy: %s" % (self.name, msg)
         sys.exit(1)
+
 
 if __name__ == "__main__":
     # Get a list of refs on stdin, do something smart with it

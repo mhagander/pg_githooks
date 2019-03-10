@@ -79,6 +79,7 @@ except Exception, e:
     print "Except: %s" % e
     debug = 1
 
+
 def should_send_message(msgtype):
     """
     Determine if a specific message type should be sent, by looking
@@ -96,6 +97,7 @@ def should_send_message(msgtype):
 
 allmail = []
 allbranches = []
+
 
 def sendmail(text, sender, subject, archive=None):
     if not c.has_option('commitmsg', 'destination'):
@@ -122,6 +124,7 @@ def sendmail(text, sender, subject, archive=None):
             msg.attach(part)
 
         allmail.append(msg)
+
 
 def flush_mail():
     """
@@ -197,12 +200,13 @@ def parse_commit_log(do_send_mail, lines):
             # Remove the 4 leading spaces and any trailing spaces
             commitmsg.append(l[4:].rstrip())
         else:
-            break # something else means start of stats section
+            break  # something else means start of stats section
 
     diffstat = []
     while len(lines):
         l = lines.pop()
-        if l.strip() == "": break
+        if l.strip() == "":
+            break
         if not l.startswith(" "):
             # If there is no starting space, it means there were no stats rows,
             # and we're already looking at the next commit. Put this line back
@@ -239,9 +243,9 @@ def parse_commit_log(do_send_mail, lines):
         mail.append("-------")
         if c.has_option('commitmsg', 'gitweb'):
             mail.append(
-                c.get('commitmsg', 'gitweb').replace('$action','commitdiff').replace('$commit', commitinfo[7:]))
+                c.get('commitmsg', 'gitweb').replace('$action', 'commitdiff').replace('$commit', commitinfo[7:]))
         if committerinfo[7:] != authorinfo[7:]:
-            mail.append(authorinfo) # already includes Author: part
+            mail.append(authorinfo)  # already includes Author: part
         mail.append("")
     mail.append("Modified Files")
     mail.append("--------------")
@@ -258,13 +262,15 @@ def parse_commit_log(do_send_mail, lines):
     else:
         archive = None
 
-    sendmail("\n".join(mail),
-             committerinfo[7:],
-             c.get('commitmsg','subject').replace("$shortmsg",
-                                                  commitmsg[0][:80-len(c.get('commitmsg','subject'))]),
-             archive,
+    sendmail(
+        "\n".join(mail),
+        committerinfo[7:],
+        c.get('commitmsg', 'subject').replace("$shortmsg",
+                                              commitmsg[0][:80 - len(c.get('commitmsg', 'subject'))]),
+        archive,
     )
     return True
+
 
 def parse_annotated_tag(lines):
     """
@@ -292,7 +298,8 @@ def parse_annotated_tag(lines):
     mail = []
     mail.append('Tag %s has been created.' % tagname)
     mail.append("View: %s" % (
-            c.get('commitmsg','gitweb').replace('$action','tag').replace('$commit', 'refs/tags/%s' % tagname)))
+        c.get('commitmsg', 'gitweb').replace('$action', 'tag').replace('$commit', 'refs/tags/%s' % tagname))
+    )
     mail.append("")
     mail.append("Log Message")
     mail.append("-----------")
@@ -305,8 +312,9 @@ def parse_annotated_tag(lines):
     # Ignore the commit it's referring to here
     sendmail("\n".join(mail),
              author,
-             c.get('commitmsg','subject').replace('$shortmsg', 'Tag %s has been created.' % tagname))
+             c.get('commitmsg', 'subject').replace('$shortmsg', 'Tag %s has been created.' % tagname))
     return
+
 
 if __name__ == "__main__":
     # Get a list of refs on stdin, do something smart with it
@@ -314,7 +322,8 @@ if __name__ == "__main__":
 
     while True:
         l = sys.stdin.readline()
-        if not l: break
+        if not l:
+            break
 
         (oldobj, newobj, ref) = l.split()
 
@@ -323,21 +332,27 @@ if __name__ == "__main__":
             # old object being all zeroes means a new branch or tag was created
             if ref.startswith("refs/heads/"):
                 # It's a branch!
-                if not do_send_mail: continue
-                if not should_send_message('branch'): continue
+                if not do_send_mail:
+                    continue
+                if not should_send_message('branch'):
+                    continue
 
-                sendmail("Branch %s was created.\n\nView: %s" % (
-                    ref,
-                    c.get('commitmsg', 'gitweb').replace('$action','shortlog').replace('$commit', ref),
-                ),
-                         c.get('commitmsg', 'fallbacksender'),
-                         c.get('commitmsg','subject').replace("$shortmsg",
-                                                              "Branch %s was created" % ref))
+                sendmail(
+                    "Branch %s was created.\n\nView: %s" % (
+                        ref,
+                        c.get('commitmsg', 'gitweb').replace('$action', 'shortlog').replace('$commit', ref),
+                    ),
+                    c.get('commitmsg', 'fallbacksender'),
+                    c.get('commitmsg', 'subject').replace("$shortmsg",
+                                                          "Branch %s was created" % ref)
+                )
             elif ref.startswith("refs/tags/"):
                 # It's a tag!
                 # It can be either an annotated tag or a lightweight one.
-                if not do_send_mail: continue
-                if not should_send_message('tag'): continue
+                if not do_send_mail:
+                    continue
+                if not should_send_message('tag'):
+                    continue
 
                 p = Popen("git cat-file -t %s" % ref, shell=True, stdout=PIPE)
                 t = p.stdout.read().strip()
@@ -346,8 +361,8 @@ if __name__ == "__main__":
                     # Lightweight tag with no further information
                     sendmail("Tag %s was created.\n" % ref,
                              c.get('commitmsg', 'fallbacksender'),
-                             c.get('commitmsg','subject').replace("$shortmsg",
-                                                                  "Tag %s was created" % ref))
+                             c.get('commitmsg', 'subject').replace("$shortmsg",
+                                                                   "Tag %s was created" % ref))
                 elif t == "tag":
                     # Annotated tag! Get the description!
                     p = Popen("git show %s" % ref, shell=True, stdout=PIPE)
@@ -361,16 +376,19 @@ if __name__ == "__main__":
 
         elif newobj == "".zfill(40):
             # new object being all zeroes means a branch was removed
-            if not do_send_mail: continue
-            if not should_send_message('branch'): continue
+            if not do_send_mail:
+                continue
+            if not should_send_message('branch'):
+                continue
 
             sendmail("Branch %s was removed." % ref,
                      c.get('commitmsg', 'fallbacksender'),
-                     c.get('commitmsg','subject').replace("$shortmsg",
-                                                          "Branch %s was removed" % ref))
+                     c.get('commitmsg', 'subject').replace("$shortmsg",
+                                                           "Branch %s was removed" % ref))
         else:
             # If both are real object ids, we can call git log on them
-            if not should_send_message('commit'): continue
+            if not should_send_message('commit'):
+                continue
 
             cmd = "git log %s..%s --stat --pretty=full" % (oldobj, newobj)
             p = Popen(cmd, shell=True, stdout=PIPE)
