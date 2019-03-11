@@ -42,6 +42,8 @@
 #                  be found. In this case the name of the sender will be taken from
 #                  the commit record, but the address is forced to the one specified
 #                  here (to ensure DKIM compliance)
+# replyto          is a comma separated list of addresses to add as reply-to.
+#                  Use $committer to insert the email address of the committer (if one exists)
 # subject          is the subject of the email
 # gitweb           is a template URL for a gitweb link
 # debug            set to 1 to output data on console instead of sending email
@@ -110,6 +112,24 @@ def sendmail(text, sender, subject, archive=None):
     if not c.has_option('commitmsg', 'destination'):
         return
 
+    if c.has_option('commitmsg', 'replyto'):
+        pieces = []
+        for p in c.get('commitmsg', 'replyto').split(','):
+            pp = p.strip()
+            if pp == '$committer':
+                if sender:
+                    pieces.append(sender.strip())
+                # Don't add fallback sender as committer
+            else:
+                pieces.append(pp)
+        replyto = ', '.join(pieces)
+    else:
+        replyto = None
+
+    if not sender:
+        # No sender specified, so use fallback
+        sender = cfg.get('commitmsg', 'fallbacksender')
+
     (sender_name, sender_address) = email.utils.parseaddr(sender)
 
     if c.has_option('commitmsg', 'forcesenderaddr'):
@@ -125,6 +145,8 @@ def sendmail(text, sender, subject, archive=None):
         msg['From'] = fullsender
         msg['To'] = m
         msg['Subject'] = subject
+        if replyto:
+            msg['Reply-To'] = replyto
 
         # Don't specify utf8 when doing debugging, because that will encode the output
         # as base64 which is completely useless on the console...
@@ -360,7 +382,7 @@ if __name__ == "__main__":
                         ref,
                         c.get('commitmsg', 'gitweb').replace('$action', 'shortlog').replace('$commit', ref),
                     ),
-                    c.get('commitmsg', 'fallbacksender'),
+                    None,
                     c.get('commitmsg', 'subject').replace("$shortmsg",
                                                           "Branch %s was created" % ref)
                 )
@@ -378,7 +400,7 @@ if __name__ == "__main__":
                 if t == "commit":
                     # Lightweight tag with no further information
                     sendmail("Tag %s was created.\n" % ref,
-                             c.get('commitmsg', 'fallbacksender'),
+                             None,
                              c.get('commitmsg', 'subject').replace("$shortmsg",
                                                                    "Tag %s was created" % ref))
                 elif t == "tag":
@@ -400,7 +422,7 @@ if __name__ == "__main__":
                 continue
 
             sendmail("Branch %s was removed." % ref,
-                     c.get('commitmsg', 'fallbacksender'),
+                     None,
                      c.get('commitmsg', 'subject').replace("$shortmsg",
                                                            "Branch %s was removed" % ref))
         else:
