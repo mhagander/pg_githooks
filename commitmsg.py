@@ -128,7 +128,7 @@ def sendmail(text, sender, subject, archive=None):
 
     if not sender:
         # No sender specified, so use fallback
-        sender = cfg.get('commitmsg', 'fallbacksender')
+        sender = c.get('commitmsg', 'fallbacksender')
 
     (sender_name, sender_address) = email.utils.parseaddr(sender)
 
