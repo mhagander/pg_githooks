@@ -244,14 +244,15 @@ def parse_commit_log(do_send_mail, lines):
 
     diffstat = []
     while len(lines):
-        l = lines.pop().decode('utf8', errors='ignore')
+        ll = lines.pop()
+        l = ll.decode('utf8', errors='ignore')
         if l.strip() == "":
             break
         if not l.startswith(" "):
             # If there is no starting space, it means there were no stats rows,
             # and we're already looking at the next commit. Put this line back
             # on the list and move on
-            lines.append(l)
+            lines.append(ll)
             break
         diffstat.append(l.strip())
 
