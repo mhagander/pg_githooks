@@ -398,18 +398,18 @@ if __name__ == "__main__":
                 p = Popen("git cat-file -t %s" % ref, shell=True, stdout=PIPE)
                 t = p.stdout.read().strip()
                 p.stdout.close()
-                if t == "commit":
+                if t == b"commit":
                     # Lightweight tag with no further information
                     sendmail("Tag %s was created.\n" % ref,
                              None,
                              c.get('commitmsg', 'subject').replace("$shortmsg",
                                                                    "Tag %s was created" % ref))
-                elif t == "tag":
+                elif t == b"tag":
                     # Annotated tag! Get the description!
                     p = Popen("git show %s" % ref, shell=True, stdout=PIPE)
                     lines = p.stdout.readlines()
                     p.stdout.close()
-                    parse_annotated_tag(lines)
+                    parse_annotated_tag([l.decode('utf8', errors='ignore') for l in lines])
                 else:
                     raise Exception("Unknown tag type '%s'" % t)
             else:
