@@ -388,6 +388,7 @@ if __name__ == "__main__":
                     c.get('commitmsg', 'subject').replace("$shortmsg",
                                                           "Branch %s was created" % branchname)
                 )
+                allbranches.append(branchname)
             elif ref.startswith("refs/tags/"):
                 # It's a tag!
                 # It can be either an annotated tag or a lightweight one.
