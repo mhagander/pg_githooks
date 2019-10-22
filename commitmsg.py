@@ -449,7 +449,7 @@ if __name__ == "__main__":
         for pingurl in c.get('commitmsg', 'pingurl').split(' '):
             if pingurl.find('$branch') >= 0:
                 # Branch is included, possibly send multiple
-                for b in allbranches:
+                for b in set(allbranches):
                     pingurls.append(pingurl.replace('$branch', b))
             else:
                 pingurls.append(pingurl)
