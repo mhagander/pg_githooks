@@ -378,14 +378,15 @@ if __name__ == "__main__":
                 if not should_send_message('branch'):
                     continue
 
+                branchname = ref.replace('refs/heads/', '')
                 sendmail(
                     "Branch %s was created.\n\nView: %s" % (
-                        ref,
+                        branchname,
                         c.get('commitmsg', 'gitweb').replace('$action', 'shortlog').replace('$commit', ref),
                     ),
                     None,
                     c.get('commitmsg', 'subject').replace("$shortmsg",
-                                                          "Branch %s was created" % ref)
+                                                          "Branch %s was created" % branchname)
                 )
             elif ref.startswith("refs/tags/"):
                 # It's a tag!
