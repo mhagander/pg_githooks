@@ -466,5 +466,10 @@ if __name__ == "__main__":
                         print("PING: {0}".format(l))
                 else:
                     print("ERROR: status {0} {1} from ping!".format(r.status_code, r.reason))
+                    if r.headers['content-type'].split(';')[0] == 'text/plain':
+                        for l in r.text.splitlines():
+                            print("ERROR: {0}".format(l))
+                    else:
+                        print("ERROR: message is in '{}' format, not including".format(r.headers['content-type']))
             except Exception as e:
                 print("ERROR: Exception when pinging!")
