@@ -83,10 +83,10 @@ c.read(cfgname)
 
 # Figure out if we should do debugging
 try:
-    debug = int(c.get('commitmsg', 'debug'))
+    debug = c.getboolean('commitmsg', 'debug', fallback=False)
 except Exception as e:
     print("Except: %s" % e)
-    debug = 1
+    debug = True
 
 
 def should_send_message(msgtype):
@@ -150,7 +150,7 @@ def sendmail(text, sender, subject, archive=None):
 
         # Don't specify utf8 when doing debugging, because that will encode the output
         # as base64 which is completely useless on the console...
-        if debug == 1:
+        if debug:
             msg.attach(MIMEText(text))
         else:
             msg.attach(MIMEText(text, _charset='utf-8'))
@@ -179,7 +179,7 @@ def flush_mail():
     # anyway, but if they do get different timestamps, we want them in the
     # correct order.
     for msg in reversed(allmail):
-        if debug == 1:
+        if debug:
             print(msg['msg'])
         else:
             smtp = smtplib.SMTP("localhost")
