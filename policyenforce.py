@@ -34,7 +34,7 @@ if not os.path.isfile(cfgname):
     raise Exception("Config file '%s' is missing!" % cfgname)
 c = ConfigParser()
 with codecs.open(cfgname, 'r', encoding='utf8') as f:
-    c.readfp(f)
+    c.read_file(f)
 
 # Figure out if we should do debugging
 try:
