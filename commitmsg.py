@@ -147,6 +147,8 @@ def sendmail(text, sender, subject, archive=None):
         msg['Subject'] = subject
         if replyto:
             msg['Reply-To'] = replyto
+        msg['X-Auto-Response-Suppress'] = 'All'
+        msg['Auto-Submitted'] = 'auto-generated'
 
         # Don't specify utf8 when doing debugging, because that will encode the output
         # as base64 which is completely useless on the console...
