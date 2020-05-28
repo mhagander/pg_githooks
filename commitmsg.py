@@ -69,6 +69,8 @@ from subprocess import Popen, PIPE
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.nonmultipart import MIMENonMultipart
+from email.header import Header
+from email.utils import formataddr, parseaddr
 from email import encoders
 import email.utils
 import smtplib
@@ -108,6 +110,15 @@ allmail = []
 allbranches = []
 
 
+def reencode_mail_address(m):
+    (name, email) = parseaddr(m)
+
+    if name:
+        return formataddr((str(Header(name, 'utf-8')), email))
+    else:
+        return email
+
+
 def sendmail(text, sender, subject, archive=None):
     if not c.has_option('commitmsg', 'destination'):
         return
@@ -142,7 +153,7 @@ def sendmail(text, sender, subject, archive=None):
 
     for m in c.get('commitmsg', 'destination').split(','):
         msg = MIMEMultipart()
-        msg['From'] = fullsender
+        msg['From'] = reencode_mail_address(fullsender)
         msg['To'] = m
         msg['Subject'] = subject
         if replyto:
