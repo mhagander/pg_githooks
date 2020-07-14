@@ -50,6 +50,8 @@
 # commitmsg        set to 0 to disable generation of commit mails
 # tagmsg           set to 0 to disable generation of tag creation mails
 # branchmsg        set to 0 to disable generation of branch creation mails
+# excludebranches  exclude commit messages if they are made on specified comma-separate list
+#                  of branches.
 # attacharchive    set to 1 to attach a complete .tar.gz file of the entire branch
 #                  that a commit was made on to the email. Only use this if the git
 #                  repository is small!!!
@@ -279,6 +281,11 @@ def parse_commit_log(do_send_mail, lines):
     # now is the time to bail.
     if not do_send_mail:
         return True
+
+    if len(branches) == 1 and c.has_option('commitmsg', 'excludebranches'):
+        if branches[0] in [b.strip() for b in c.get('commitmsg', 'excludebranches').split(',')]:
+            print("Not sending commit message for excluded branch {}".format(branches[0]))
+            return True
 
     # Everything is parsed, put together an email
     mail = []
