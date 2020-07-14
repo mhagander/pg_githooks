@@ -392,11 +392,15 @@ if __name__ == "__main__":
                     continue
 
                 branchname = ref.replace('refs/heads/', '')
-                sendmail(
-                    "Branch %s was created.\n\nView: %s" % (
-                        branchname,
+                if c.has_option('commitmsg', 'gitweb'):
+                    gwstr = "View: %s" % (
                         c.get('commitmsg', 'gitweb').replace('$action', 'shortlog').replace('$commit', ref),
-                    ),
+                    )
+                else:
+                    gwstr = ""
+
+                sendmail(
+                    "Branch %s was created.\n\n%s" % (branchname, gwstr),
                     None,
                     c.get('commitmsg', 'subject').replace("$shortmsg",
                                                           "Branch %s was created" % branchname)
