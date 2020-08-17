@@ -282,10 +282,11 @@ def parse_commit_log(do_send_mail, lines):
     if not do_send_mail:
         return True
 
-    if len(branches) == 1 and c.has_option('commitmsg', 'excludebranches'):
-        if branches[0] in [b.strip() for b in c.get('commitmsg', 'excludebranches').split(',')]:
-            print("Not sending commit message for excluded branch {}".format(branches[0]))
-            return True
+    if c.has_option('commitmsg', 'excludebranches'):
+        for branchmatch in branches:
+            if branchmatch in [b.strip() for b in c.get('commitmsg', 'excludebranches').split(',')]:
+                print("Not sending commit message for excluded branch {}".format(branches[0]))
+                return True
 
     # Everything is parsed, put together an email
     mail = []
