@@ -253,6 +253,31 @@ class Branch(PolicyObject):
         sys.exit(1)
 
 
+class ForcePush(PolicyObject):
+    def __init__(self, ref, oldobj, newobj):
+        self.name = ref
+        self.old = oldobj
+        self.new = newobj
+
+    def check_force(self):
+        patterns = self._enforce_str("forcepushbranches")
+        if not patterns:
+            # If not configured, then all branches are accepted
+            return
+
+        for p in patterns.split(','):
+            if re.fullmatch(p, self.name[len("refs/heads/"):]):
+                return
+
+        # With no match on the branch name that means that *if* this is a force-push, we should
+        # reject it. So figure out if it is.
+        p = Popen("git merge-base {} {}".format(self.old, self.new), shell=True, stdout=PIPE)
+        merge = p.stdout.read()
+        if merge != self.old:
+            print("Forced pushes are not allowed on branch {}".format(self.name[len("refs/heads/"):]))
+            sys.exit(1)
+
+
 if __name__ == "__main__":
     # Get a list of refs on stdin, do something smart with it
     ref = sys.argv[1]
@@ -274,8 +299,12 @@ if __name__ == "__main__":
         # new object being all zeroes means a branch was removed
         Branch(newobj, ref).check_remove()
     else:
-        # These are both real objects. Use git rev-list to identify
-        # exactly which ones they are, and apply policies as needed.
+        # These are both real objects.
+        # If force push protection is configured, make sure this is not a force-push.
+        ForcePush(ref, oldobj, newobj).check_force()
+
+        # Now use git rev-list to identify exactly which ones they are,
+        # and apply policies as needed.
         p = Popen("git rev-list %s..%s" % (oldobj, newobj), shell=True, stdout=PIPE)
         for l in p.stdout:
             if debug:

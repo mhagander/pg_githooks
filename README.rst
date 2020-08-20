@@ -116,7 +116,7 @@ configuration for the script. It should contain something like: ::
 	[policyenforce]
 	debug = 0
 	gpghome=/some/where/
-	
+
 	[policies]
 	nomerge=1
 	committerequalsauthor=1
@@ -125,9 +125,10 @@ configuration for the script. It should contain something like: ::
 	nobranchcreate=1
 	nobranchdelete=1
 	branchnamefilter=REL_\d+$
+	forcepushbranches=
 	signcommits=1
 	signtags=1
-	
+
 	[committers]
 	Example User=example@example.org
 	Example Other=other@example.org
@@ -175,6 +176,14 @@ branchnamefilter
 	the beginning, but if you want it anchored at the end you need to
 	add a $ at the end. Setting *nobranchcreate* will override this
 	setting and not allow any branches at all.
+
+forcepushbranches
+	Set to a comma separated list of regular expressions (or just
+	strings) that represent branches that *allow* forced
+	pushing. If left empty, no check against forced pushing is
+	made, and everything is allowed.  If set to any value, then
+	any branch that does not match a pattern configured will
+	refuse a forced push.
 
 
 git command wrapper script
