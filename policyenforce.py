@@ -237,7 +237,7 @@ class Branch(PolicyObject):
             # All branch names starts with refs/heads/, so just remove that
             # when doing the regexp match
             if not re.match(self._enforce_str("branchnamefilter"),
-                            self.name[11:]):
+                            self.name[len("refs/heads/"):]):
                 self._policyfail("Branch name does not match allowed regexp")
 
     def check_remove(self):
