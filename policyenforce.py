@@ -92,7 +92,7 @@ class Commit(PolicyObject):
         p = Popen("git cat-file commit %s" % commitid, shell=True, stdout=PIPE)
         for l in p.stdout:
             l = l.decode('utf8', errors='ignore')
-            if re.match('^(\s+)$', l):
+            if re.match(r'^(\s+)$', l):
                 break
             elif l.startswith("tree "):
                 self.tree = l[5:].strip()
@@ -125,7 +125,7 @@ class Commit(PolicyObject):
 
         Returns the "name <email>" part.
         """
-        m = re.search('^([^<]+ <[^>]+>) \d+ [+-]\d{4}$', authorstring)
+        m = re.search(r'^([^<]+ <[^>]+>) \d+ [+-]\d{4}$', authorstring)
         if not m:
             raise Exception("User '%s' on commit %s does not follow format rules." % (authorstring, self.commitid))
         return m.group(1)
