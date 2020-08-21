@@ -272,7 +272,7 @@ class ForcePush(PolicyObject):
         # With no match on the branch name that means that *if* this is a force-push, we should
         # reject it. So figure out if it is.
         p = Popen("git merge-base {} {}".format(self.old, self.new), shell=True, stdout=PIPE)
-        merge = p.stdout.read()
+        merge = p.stdout.read().decode('utf8', 'ignore').strip()
         if merge != self.old:
             print("Forced pushes are not allowed on branch {}".format(self.name[len("refs/heads/"):]))
             sys.exit(1)
