@@ -52,6 +52,7 @@
 # branchmsg        set to 0 to disable generation of branch creation mails
 # excludebranches  exclude commit messages if they are made on specified comma-separate list
 #                  of branches.
+# includediff      include the diff of the commit (up to 500 lines) at the end of the message
 # attacharchive    set to 1 to attach a complete .tar.gz file of the entire branch
 #                  that a commit was made on to the email. Only use this if the git
 #                  repository is small!!!
@@ -314,6 +315,15 @@ def parse_commit_log(do_send_mail, lines):
     mail.extend(diffstat)
     mail.append("")
     mail.append("")
+
+    if c.has_option('commitmsg', 'includediff') and c.get('commitmsg', 'includediff') == '1':
+        # Include the full diff, up to 500 lines.
+        mail.append("Changes")
+        mail.append("--------------")
+        p = Popen("git diff {}^..{}".format(commitinfo[7:], commitinfo[7:]), shell=True, stdout=PIPE)
+        for l in p.stdout.read().splitlines():
+            mail.append(l.decode('utf8', errors='ignore'))
+        p.stdout.close()
 
     if len(branches) == 1 and c.has_option('commitmsg', 'attacharchive') and c.get('commitmsg', 'attacharchive') == '1':
         # Archive the branch to a .tar.gz and send it (this is probably really

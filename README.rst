@@ -83,6 +83,8 @@ excludebranches
   set to a comma separated list of branch names that will *not* get commit messages
   sent for them (such as a CI branch or so). Branch creation and removal messages
   are still sent for such branches (assuming *branchmsg* is enabled).
+includediff
+  include the diff of the commit (up to 500 lines) at the end of the message
 attacharchive
   set to 1 to attach a complete .tar.gz file of the entire branch
   that a commit was made on to the email. Only use this if the git
