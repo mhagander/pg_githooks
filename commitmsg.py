@@ -20,7 +20,7 @@
 # [commitmsg]
 # destination = somewhere@somewhere.com
 # fallbacksender = somewhere@somewhere.com
-# forcesenderaddr = magnus+force@hagander.net
+# forcesenderaddr = somewhere@somewhere.com
 # subject = pgsql: $shortmsg
 # gitweb = http://git.postgresql.org/gitweb?p=postgresql.git;a=$action;h=$commit
 # debug = 0
