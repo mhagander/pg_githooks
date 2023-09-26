@@ -37,6 +37,7 @@ configuration for the script. It should contain something like: ::
 	destination = somewhere@somewhere.com
 	fallbacksender = somewhere@somewhere.com
 	forcesenderaddr = noreply@somewhere.com
+	forcesendername = Some Git Repository
 	replyto = somewhere@somewhere.com, $committer
 	subject = pgsql: $shortmsg
 	gitweb = http://git.postgresql.org/gitweb?p=postgresql.git;a=$action;h=$commit
@@ -67,6 +68,8 @@ forcesenderaddr
   be found. In this case the name of the sender will be taken from
   the commit record, but the address is forced to the one specified
   here (to ensure DKIM compliance)
+forcesendername
+  is the name to use as the sender, instead of the committer name.
 replyto
   is a comma separated list of addresses to add as reply-to.
   Use $committer to insert the email address of the committer (if one exists)

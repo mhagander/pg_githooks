@@ -21,6 +21,7 @@
 # destination = somewhere@somewhere.com
 # fallbacksender = somewhere@somewhere.com
 # forcesenderaddr = somewhere@somewhere.com
+# forcesendername = Some Git Repository
 # subject = pgsql: $shortmsg
 # gitweb = http://git.postgresql.org/gitweb?p=postgresql.git;a=$action;h=$commit
 # debug = 0
@@ -42,6 +43,8 @@
 #                  be found. In this case the name of the sender will be taken from
 #                  the commit record, but the address is forced to the one specified
 #                  here (to ensure DKIM compliance)
+# forcesendername  is the name to use as the sender, instead of the committer name.
+#                  Use $committer to inject the original name of the committer in the string.
 # replyto          is a comma separated list of addresses to add as reply-to.
 #                  Use $committer to insert the email address of the committer (if one exists)
 # subject          is the subject of the email
@@ -148,6 +151,9 @@ def sendmail(text, sender, subject, archive=None):
 
     if c.has_option('commitmsg', 'forcesenderaddr'):
         sender_address = c.get('commitmsg', 'forcesenderaddr')
+
+    if c.has_option('commitmsg', 'forcesendername'):
+        sender_name = c.get('commitmsg', 'forcesendername').replace('$committer', sender_name)
 
     if sender_name:
         fullsender = "{0} <{1}>".format(sender_name, sender_address)
@@ -293,6 +299,11 @@ def parse_commit_log(do_send_mail, lines):
     mail = []
     mail.extend(commitmsg)
     mail.append("")
+    if c.has_option('commitmsg', 'forcesendername'):
+        # If the sender name is changed, put the committer info in the contents
+        # of the mail.
+        mail.append("Committer: {}".format(committerinfo[7:]))
+        mail.append("")
     if len(branches) > 1:
         mail.append("Branches")
         mail.append("--------")
